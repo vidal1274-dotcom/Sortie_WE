@@ -3,6 +3,11 @@
    ========================================================= */
 import { normalizeSearchText } from './utils.js';
 
+let _procheThreshold = 30;
+
+export function setProcheThreshold(km) { _procheThreshold = km; }
+export function getProcheThreshold()   { return _procheThreshold; }
+
 const FILTER_FUNCTIONS = {
   all: () => true,
   gratuit: site => {
@@ -13,7 +18,7 @@ const FILTER_FUNCTIONS = {
     const v = (site.vigilance || '').toLowerCase();
     return v.includes('sans péage') || v.includes('sans peage') || site.sans_peage === true;
   },
-  proche: site => site.distance_km != null && site.distance_km <= 30,
+  proche: site => site.distance_km != null && site.distance_km <= _procheThreshold,
   nature: site => /nature|rando|gorge|canyon|rivière|montagne|garrigue|forêt/i.test(site.type_sortie || site.secteur || ''),
   patrimoine: site => /patrimoine|château|musée|abbaye|ville|village|historique/i.test(site.type_sortie || site.secteur || ''),
   famille: site => /famille|enfant|kid/i.test(site.programme_court || site.points_forts || ''),
@@ -82,7 +87,15 @@ export function sortSites(sites, sortBy = 'distance') {
 }
 
 /* =========================================================
-   BLOC 05 — INITIALISATION DES CHIPS UI
+   BLOC 05 — FILTRE DISTANCE MAXIMALE
+   ========================================================= */
+export function applyDistanceFilter(sites, maxKm) {
+  if (!maxKm || maxKm >= 150) return sites;
+  return sites.filter(s => s.distance_km == null || s.distance_km <= maxKm);
+}
+
+/* =========================================================
+   BLOC 06 — INITIALISATION DES CHIPS UI
    ========================================================= */
 export function initFilterChips(onFilterChange) {
   document.querySelectorAll('.filter-chip').forEach(chip => {

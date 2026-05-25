@@ -39,6 +39,7 @@ const CACHE_ASSETS = [
   '/js/network-manager.js',
   '/js/sync-policy.js',
   '/js/network-ui.js',
+  '/js/geolocation.js',
   '/js/navigation.js',
   '/js/nearby.js',
   '/js/thematic-search.js',

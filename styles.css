@@ -20,6 +20,7 @@
   --header-height: 56px;
   --nav-height: 48px;
   --filters-height: 44px;
+  --location-bar-height: 40px;
   --radius: 10px;
   --radius-sm: 6px;
   --shadow: 0 4px 20px rgba(0,0,0,0.4);
@@ -235,11 +236,116 @@ html, body {
 }
 
 /* =========================================================
+   BLOC 04b — BARRE LOCALISATION + DISTANCE
+   ========================================================= */
+#location-bar {
+  position: fixed;
+  top: calc(var(--header-height) + var(--nav-height) + var(--filters-height));
+  left: 0; right: 0;
+  height: var(--location-bar-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  z-index: 900;
+  overflow: hidden;
+}
+
+.location-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color 0.2s, background 0.2s;
+}
+.location-btn:hover { border-color: #3498db; }
+.location-btn.gps-active {
+  border-color: #3498db;
+  background: rgba(52,152,219,0.12);
+  color: #3498db;
+}
+.location-btn.gps-loading { opacity: 0.7; pointer-events: none; }
+
+#location-label { overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+
+.location-status {
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
+.distance-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.distance-label {
+  font-size: 12px;
+  color: var(--color-text-dim);
+  white-space: nowrap;
+}
+
+#distance-slider {
+  flex: 1;
+  min-width: 80px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+#distance-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3498db;
+  border: 2px solid #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+#distance-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3498db;
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+
+.distance-display {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3498db;
+  min-width: 38px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* =========================================================
    BLOC 05 — MAIN + PANNEAUX
    ========================================================= */
 #app-main {
   position: fixed;
-  top: calc(var(--header-height) + var(--nav-height) + var(--filters-height));
+  top: calc(var(--header-height) + var(--nav-height) + var(--filters-height) + var(--location-bar-height));
   left: 0; right: 0;
   bottom: 0;
   overflow: hidden;

@@ -1,10 +1,11 @@
 /* =========================================================
    BLOC 01 — IMPORTS PRINCIPAUX
    ========================================================= */
-import { loadSites, cacheSitesLocally, getDataStats, applyManualGpsCorrection } from './data-loader.js';
-import { initMap, fitBoundsToSites, flyToSite } from './map.js';
+import { loadSites, cacheSitesLocally, getDataStats, applyManualGpsCorrection, recalcDistances } from './data-loader.js';
+import { initMap, fitBoundsToSites, flyToSite, showUserLocationMarker, clearUserLocationMarker } from './map.js';
 import { renderSiteMarkers, buildSiteBadges, focusOnSite } from './markers.js';
-import { applyFilter, applyTextFilter, sortSites, initFilterChips } from './filters.js';
+import { applyFilter, applyTextFilter, applyDistanceFilter, sortSites, initFilterChips, setProcheThreshold } from './filters.js';
+import { requestUserLocation, getStoredOrigin, saveOrigin, clearUserLocation, getStoredMaxKm, saveMaxKm, isUsingGps, ORIGIN_DEFAULT } from './geolocation.js';
 import { enrichSitesWithEcoScore, getBestDeals } from './economy-engine.js';
 import { loadVehicleProfile, saveVehicleProfile, getVehicleLabel, isVehicleConfigured } from './vehicle-profile.js';
 import { initGlobalSearch, interpretSearchQuery } from './global-search.js';
@@ -30,6 +31,8 @@ let _filteredSites = [];
 let _vehicleProfile = null;
 let _currentFilter = 'all';
 let _searchQuery = '';
+let _maxDistanceKm = 150; // 150 = pas de filtre (affiche tout)
+let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
 
 /* =========================================================
    BLOC 03 — INITIALISATION PRINCIPALE
@@ -83,6 +86,9 @@ async function init() {
 
   // Filtres rapides
   initFilterChips(onFilterChange);
+
+  // Barre localisation + slider distance
+  initLocationBar();
 
   // Bouton surprise
   document.getElementById('btn-surprise')?.addEventListener('click', onSurpriseClick);
@@ -184,6 +190,7 @@ function onSuggestion(suggestion) {
 function applyFiltersAndRender() {
   let results = [..._sites];
   results = applyFilter(results, _currentFilter);
+  results = applyDistanceFilter(results, _maxDistanceKm);
   if (_searchQuery) {
     const interpreted = interpretSearchQuery(_searchQuery, results);
     results = interpreted.results;
@@ -192,7 +199,100 @@ function applyFiltersAndRender() {
   _filteredSites = results;
   renderAll();
   const info = document.getElementById('list-stats');
-  if (info) info.textContent = `${results.length} site(s) — filtre : ${_currentFilter} — recherche : "${_searchQuery}"`;
+  if (info) {
+    const distLabel = _maxDistanceKm >= 150 ? 'tous rayons' : `≤ ${_maxDistanceKm} km`;
+    info.textContent = `${results.length} site(s) — ${distLabel} — filtre : ${_currentFilter}`;
+  }
+}
+
+/* =========================================================
+   BLOC 05b — BARRE LOCALISATION + DISTANCE
+   ========================================================= */
+function initLocationBar() {
+  // Restaurer l'état sauvegardé
+  const saved = getStoredOrigin();
+  _originCoords = { lat: saved.lat, lon: saved.lon };
+  _maxDistanceKm = getStoredMaxKm();
+
+  const btn    = document.getElementById('btn-gps-location');
+  const label  = document.getElementById('location-label');
+  const slider = document.getElementById('distance-slider');
+  const display = document.getElementById('distance-display');
+  const chipProche = document.getElementById('chip-proche');
+
+  function updateLocationUI() {
+    const usingGps = isUsingGps();
+    if (btn) btn.classList.toggle('gps-active', usingGps);
+    const origin = getStoredOrigin();
+    if (label) label.textContent = origin.label;
+  }
+
+  function updateDistanceUI(km) {
+    if (display) display.textContent = km >= 150 ? 'Tous' : `${km} km`;
+    if (chipProche) chipProche.textContent = km >= 150 ? 'Proche (<30km)' : `Proche (<${km}km)`;
+    setProcheThreshold(Math.min(km, 30));
+  }
+
+  // Initialiser UI avec valeurs sauvegardées
+  if (slider) slider.value = _maxDistanceKm;
+  updateDistanceUI(_maxDistanceKm);
+  updateLocationUI();
+
+  // Afficher le marqueur si une position GPS est déjà enregistrée
+  if (isUsingGps()) {
+    const origin = getStoredOrigin();
+    showUserLocationMarker(origin.lat, origin.lon, origin.label, _maxDistanceKm < 150 ? _maxDistanceKm : null);
+  }
+
+  // Slider distance
+  slider?.addEventListener('input', () => {
+    const km = parseInt(slider.value, 10);
+    _maxDistanceKm = km;
+    saveMaxKm(km);
+    updateDistanceUI(km);
+    // Redessiner le cercle sur la carte
+    const origin = getStoredOrigin();
+    if (isUsingGps()) {
+      showUserLocationMarker(origin.lat, origin.lon, origin.label, km < 150 ? km : null);
+    }
+    applyFiltersAndRender();
+  });
+
+  // Bouton GPS
+  btn?.addEventListener('click', async () => {
+    if (isUsingGps()) {
+      // Basculer vers Uchaud
+      clearUserLocation();
+      _originCoords = { lat: ORIGIN_DEFAULT.lat, lon: ORIGIN_DEFAULT.lon };
+      clearUserLocationMarker();
+      _sites = recalcDistances(_sites, ORIGIN_DEFAULT.lat, ORIGIN_DEFAULT.lon);
+      _sites = enrichSitesWithEcoScore(_sites, _vehicleProfile);
+      updateLocationUI();
+      applyFiltersAndRender();
+      showToast('Point de départ : Uchaud', 'info');
+      return;
+    }
+    // Demander la localisation GPS
+    btn.classList.add('gps-loading');
+    if (label) label.textContent = 'Localisation…';
+    try {
+      const pos = await requestUserLocation();
+      saveOrigin(pos.lat, pos.lon, 'Ma position');
+      _originCoords = pos;
+      _sites = recalcDistances(_sites, pos.lat, pos.lon);
+      _sites = enrichSitesWithEcoScore(_sites, _vehicleProfile);
+      showUserLocationMarker(pos.lat, pos.lon, 'Ma position', _maxDistanceKm < 150 ? _maxDistanceKm : null);
+      updateLocationUI();
+      applyFiltersAndRender();
+      flyToSite(pos.lat, pos.lon, 11);
+      showToast('Position GPS détectée — distances recalculées.', 'success');
+    } catch(err) {
+      showToast(err.message, 'error');
+      if (label) label.textContent = getStoredOrigin().label;
+    } finally {
+      btn.classList.remove('gps-loading');
+    }
+  });
 }
 
 /* =========================================================

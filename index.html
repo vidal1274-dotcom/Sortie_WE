@@ -67,7 +67,7 @@
     <button class="filter-chip active" data-filter="all">Tous</button>
     <button class="filter-chip" data-filter="gratuit">Gratuit</button>
     <button class="filter-chip" data-filter="sans_peage">Sans péage</button>
-    <button class="filter-chip" data-filter="proche">Proche (&lt;30km)</button>
+    <button class="filter-chip" data-filter="proche" id="chip-proche">Proche (&lt;30km)</button>
     <button class="filter-chip" data-filter="nature">Nature</button>
     <button class="filter-chip" data-filter="patrimoine">Patrimoine</button>
     <button class="filter-chip" data-filter="famille">Famille</button>
@@ -75,6 +75,23 @@
     <button class="filter-chip" data-filter="marche">Marché</button>
     <button class="filter-chip" data-filter="photo">📷 Photo</button>
     <button class="filter-chip" data-filter="recharge">⚡ Recharge</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     BARRE LOCALISATION + DISTANCE
+═══════════════════════════════════════════════ -->
+<div id="location-bar">
+  <button id="btn-gps-location" class="location-btn" title="Utiliser ma position GPS">
+    <span class="location-icon">📍</span>
+    <span id="location-label">Uchaud</span>
+    <span id="location-status" class="location-status"></span>
+  </button>
+  <div class="distance-control">
+    <span class="distance-label">Rayon :</span>
+    <input type="range" id="distance-slider" min="10" max="150" step="5" value="150"
+           aria-label="Distance maximale" />
+    <span id="distance-display" class="distance-display">Tous</span>
   </div>
 </div>
 

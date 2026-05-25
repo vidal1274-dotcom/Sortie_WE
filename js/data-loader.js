@@ -2,6 +2,7 @@
    BLOC 01 — CHARGEMENT SITES.JSON
    ========================================================= */
 import { SITES_JSON_URL, UCHAUD_COORDS } from './config.js';
+import { getStoredOrigin } from './geolocation.js';
 import { haversineDistance, isValidCoord, generateId } from './utils.js';
 import { dbGetAll, STORES, saveGpsCorrection, loadAllGpsCorrections } from './storage.js';
 
@@ -21,13 +22,14 @@ export async function loadSites() {
   const corrMap = {};
   corrections.forEach(c => { corrMap[c.site_id] = c; });
 
+  const origin = getStoredOrigin();
   return sites.map((site, idx) => {
     const id = site.id || generateId('site');
     const corr = corrMap[id];
     let lat = corr ? corr.lat : (site.lat || site.latitude || null);
     let lon = corr ? corr.lon : (site.lon || site.longitude || null);
     const hasGps = isValidCoord(lat, lon);
-    const distKm = hasGps ? haversineDistance(UCHAUD_COORDS[0], UCHAUD_COORDS[1], lat, lon) : null;
+    const distKm = hasGps ? haversineDistance(origin.lat, origin.lon, lat, lon) : null;
     return {
       ...site,
       id,
@@ -57,10 +59,22 @@ export async function cacheSitesLocally(sites) {
    ========================================================= */
 export async function applyManualGpsCorrection(siteId, lat, lon, sites) {
   await saveGpsCorrection(siteId, lat, lon);
+  const origin = getStoredOrigin();
   return sites.map(s => {
     if (s.id !== siteId) return s;
-    const distKm = haversineDistance(UCHAUD_COORDS[0], UCHAUD_COORDS[1], lat, lon);
+    const distKm = haversineDistance(origin.lat, origin.lon, lat, lon);
     return { ...s, lat, lon, has_gps: true, gps_corrected: true, distance_km: Math.round(distKm) };
+  });
+}
+
+/* =========================================================
+   BLOC 05 — RECALCUL DES DISTANCES (changement d'origine)
+   ========================================================= */
+export function recalcDistances(sites, originLat, originLon) {
+  return sites.map(s => {
+    if (!s.has_gps) return s;
+    const distKm = haversineDistance(originLat, originLon, s.lat, s.lon);
+    return { ...s, distance_km: Math.round(distKm) };
   });
 }
 

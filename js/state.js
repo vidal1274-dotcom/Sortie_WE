@@ -15,7 +15,10 @@ const _state = {
   pendingSyncCount: 0,        // photos en attente de sync
   isLoading: false,
   lastSyncAt: null,
-  economyFilter: 'all'
+  economyFilter: 'all',
+  originCoords: null,         // {lat, lon} — null = Uchaud par défaut
+  originLabel: 'Uchaud',      // étiquette affichée
+  maxDistanceKm: 150          // 150 = pas de filtre distance
 };
 
 const _listeners = {};
