@@ -1,7 +1,7 @@
 /* =========================================================
    BLOC 01 — CONFIGURATION CACHE PWA
    ========================================================= */
-const CACHE_NAME = 'sorties-nimes-v2';
+const CACHE_NAME = 'sorties-nimes-v3';
 const OFFLINE_URL = '/index.html';
 
 const CACHE_ASSETS = [
