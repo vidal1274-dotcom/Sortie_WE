@@ -34,7 +34,7 @@ export function clearUserLocation() {
 
 export function getStoredMaxKm() {
   const v = lsGet(LS_KEY_MAX_KM);
-  return v ? parseInt(v, 10) : 150;
+  return v ? parseInt(v, 10) : 100;
 }
 
 export function saveMaxKm(km) {

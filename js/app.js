@@ -31,7 +31,7 @@ let _filteredSites = [];
 let _vehicleProfile = null;
 let _currentFilter = 'all';
 let _searchQuery = '';
-let _maxDistanceKm = 150; // 150 = pas de filtre (affiche tout)
+let _maxDistanceKm = 100; // 100 km par défaut
 let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
 
 /* =========================================================
