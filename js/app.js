@@ -684,7 +684,6 @@ function initTrackingUI() {
     }
 
     // Rappel eau toutes les 20 min
-    const durationMin = (Date.now() - _startTime) / 60000;
     if (durationMin - _lastWaterReminderMin >= 20 && _lastWaterReminderMin >= 0) {
       const water2 = calculateWaterNeeds(_activityMode, durationMin, _tempCelsius);
       speak(`N'oublie pas de boire. Objectif ${water2.mlPerHour} millilitres par heure.`);
