@@ -1579,3 +1579,251 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 .welcome-animate-out { animation: wFadeOut 0.28s ease-in forwards; }
 @keyframes wFadeIn  { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
 @keyframes wFadeOut { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(0.97); } }
+
+/* =========================================================
+   BLOC AUTH — Écran d'authentification locale
+   ========================================================= */
+
+/* Conteneur plein écran */
+#auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0f1a;
+}
+
+/* Dégradés décoratifs d'arrière-plan */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at top,    rgba(233,69,96,0.15)  0%, transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(245,166,35,0.10) 0%, transparent 60%);
+}
+
+/* Carte centrale */
+.auth-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(19,22,43,0.95);
+  border: 1px solid rgba(233,69,96,0.3);
+  border-radius: 24px;
+  padding: 40px 32px;
+  width: min(420px, calc(100vw - 32px));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  text-align: center;
+  animation: authFadeIn 0.4s ease-out;
+}
+
+/* Logo */
+.auth-logo {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* Titre dégradé (même pattern que .app-title) */
+.auth-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e94560 0%, #f5a623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+/* Sous-titre */
+.auth-subtitle {
+  color: #7a7d99;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+/* Formulaire */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+
+/* Champ (label + input) */
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b0b2cc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.auth-input {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #eaeaf0;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.auth-input:focus {
+  border-color: #e94560;
+  box-shadow: 0 0 0 3px rgba(233,69,96,0.12);
+}
+
+/* Message d'erreur */
+.auth-error {
+  background: rgba(231,76,60,0.15);
+  border: 1px solid rgba(231,76,60,0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #e74c3c;
+  font-size: 13px;
+}
+.auth-error.hidden { display: none; }
+
+/* Bouton principal */
+.auth-btn {
+  background: linear-gradient(135deg, #e94560, #f5a623);
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  width: 100%;
+}
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-btn:hover:not(:disabled) { opacity: 0.9; }
+
+/* Lien bascule login / register */
+.auth-link {
+  background: none;
+  border: none;
+  color: #7a7d99;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+.auth-link:hover { color: #e94560; }
+
+/* Liste des utilisateurs existants */
+.auth-users {
+  margin-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 16px;
+}
+
+.auth-users-title {
+  font-size: 12px;
+  color: #7a7d99;
+  margin-bottom: 10px;
+}
+
+/* Chips utilisateurs */
+.auth-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(233,69,96,0.12);
+  border: 1px solid rgba(233,69,96,0.25);
+  border-radius: 20px;
+  padding: 6px 14px;
+  color: #eaeaf0;
+  font-size: 13px;
+  cursor: pointer;
+  margin: 3px;
+  transition: background 0.2s;
+}
+.auth-user-chip:hover { background: rgba(233,69,96,0.2); }
+
+/* Animation d'entrée de la carte */
+@keyframes authFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Animation de sortie de l'écran (réutilise wFadeOut) */
+#auth-screen.auth-animate-out {
+  animation: wFadeOut 0.3s ease-in forwards;
+}
+
+/* =========================================================
+   BLOC — HISTORIQUE PARCOURS
+   ========================================================= */
+.track-history-panel {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(380px, calc(100vw - 24px));
+  max-height: 320px;
+  background: rgba(13,15,26,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(233,69,96,0.3);
+  border-radius: 16px;
+  z-index: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.track-history-panel.hidden { display: none; }
+
+.track-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-weight: 700;
+  font-size: 14px;
+  color: #eaeaf0;
+  flex-shrink: 0;
+}
+
+.track-history-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.track-history-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.track-history-item:hover { background: rgba(233,69,96,0.12); border-color: rgba(233,69,96,0.3); }
+
+.track-history-item-info { flex: 1; min-width: 0; }
+.track-history-item-label { font-size: 13px; font-weight: 600; color: #eaeaf0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-history-item-meta { font-size: 11px; color: #7a7d99; margin-top: 2px; }
+
+.track-history-item-actions { display: flex; gap: 6px; }
+.track-history-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.15s; }
+.track-history-btn:hover { background: rgba(255,255,255,0.1); }

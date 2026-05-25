@@ -24,6 +24,7 @@ import { buildVerificationLinks } from './energy-rules.js';
 import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
 import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
+import { initAuthScreen, logout, getCurrentUser } from './auth.js';
 
 /* =========================================================
    BLOC 02 — ÉTAT APPLICATIF LOCAL
@@ -40,6 +41,20 @@ let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
    BLOC 03 — INITIALISATION PRINCIPALE
    ========================================================= */
 async function init() {
+  // Auth en premier — tout le reste attend la connexion
+  initAuthScreen(async (user) => {
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.classList.remove('hidden');
+      logoutBtn.title = `Connecté : ${user.username} — Cliquer pour se déconnecter`;
+      logoutBtn.textContent = `👤 ${user.username}`;
+      logoutBtn.addEventListener('click', () => { logout(); location.reload(); });
+    }
+    await startApp();
+  });
+}
+
+async function startApp() {
   console.log('[app] Initialisation Mes Sorties Nîmes');
 
   // Réseau
@@ -781,6 +796,65 @@ function initTrackingUI() {
     if (sid) await updateSessionVisibility(sid, _isPublic);
     showToast(_isPublic ? '🌍 Parcours public.' : '🔒 Parcours privé.', 'info');
   });
+
+  // Historique des parcours
+  const btnHistory = document.getElementById('btn-track-history');
+  const historyPanel = document.getElementById('track-history-panel');
+  const historyList = document.getElementById('track-history-list');
+  const btnHistoryClose = document.getElementById('btn-track-history-close');
+
+  async function renderTrackHistory() {
+    const sessions = await getAllSessions();
+    if (!sessions.length) {
+      if (historyList) historyList.innerHTML = '<div style="padding:16px;text-align:center;color:#7a7d99;font-size:13px">Aucun parcours enregistré</div>';
+      return;
+    }
+    if (!historyList) return;
+    historyList.innerHTML = sessions
+      .sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''))
+      .map(s => {
+        const date = s.started_at ? new Date(s.started_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+        const modeEmoji = { running:'🏃', hiking:'🥾', walking:'🚶', casual:'🗺️' }[s.activity_mode] || '📍';
+        return `<div class="track-history-item" data-sid="${s.id}">
+          <span style="font-size:20px">${modeEmoji}</span>
+          <div class="track-history-item-info">
+            <div class="track-history-item-label">${s.label || 'Parcours'}</div>
+            <div class="track-history-item-meta">${date} · ${s.is_public ? '🌍 Public' : '🔒 Privé'}</div>
+          </div>
+          <div class="track-history-item-actions">
+            <button class="track-history-btn" data-action="show" data-sid="${s.id}" title="Afficher sur la carte">🗺️</button>
+            <button class="track-history-btn" data-action="gpx"  data-sid="${s.id}" title="Exporter GPX">⬇️</button>
+          </div>
+        </div>`;
+      }).join('');
+
+    historyList.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const sid = btn.dataset.sid;
+        const pts = await loadTrackPoints(sid);
+        const sessions2 = await getAllSessions();
+        const sess = sessions2.find(s => s.id === sid);
+        if (btn.dataset.action === 'show') {
+          renderTrack(pts);
+          historyPanel?.classList.add('hidden');
+        } else if (btn.dataset.action === 'gpx') {
+          exportAsGPX(pts, sess?.label || 'Parcours');
+        }
+      });
+    });
+  }
+
+  btnHistory?.addEventListener('click', async () => {
+    const isHidden = historyPanel?.classList.contains('hidden');
+    if (isHidden) {
+      historyPanel?.classList.remove('hidden');
+      await renderTrackHistory();
+    } else {
+      historyPanel?.classList.add('hidden');
+    }
+  });
+  btnHistoryClose?.addEventListener('click', () => historyPanel?.classList.add('hidden'));
 }
 
 function showRunSummary(stats, activityMode, tempC, weightKg) {

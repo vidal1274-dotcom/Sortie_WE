@@ -64,15 +64,35 @@ async function processPhotoFile(file, sites) {
 /* =========================================================
    BLOC 04 — STOCKAGE LOCAL (TOUJOURS EN PREMIER)
    ========================================================= */
+function autoDownloadPhoto(photo) {
+  try {
+    const dataUrl = photo.thumbnail || photo.data_url;
+    if (!dataUrl) return;
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = photo.filename || `sortie_${Date.now()}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 100);
+  } catch (e) {
+    console.warn('[photos] autoDownload failed', e);
+  }
+}
+
 export async function savePhotoLocally(photo) {
   try {
     await dbPut(STORES.PHOTOS, photo);
+    autoDownloadPhoto(photo);
     return true;
   } catch(e) {
     console.error('[photos] ERREUR CRITIQUE sauvegarde locale', e);
     showToast('Erreur sauvegarde locale — photo peut être perdue !', 'error');
     return false;
   }
+}
+
+export function downloadPhoto(photo) {
+  autoDownloadPhoto(photo);
 }
 
 /* =========================================================

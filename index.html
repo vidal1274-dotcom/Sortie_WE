@@ -19,6 +19,11 @@
 </head>
 <body>
 
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="hidden">
+  <!-- rendered dynamically by auth.js -->
+</div>
+
 <!-- ═══════════════════════════════════════════════
      ÉCRAN D'ACCUEIL — CHOIX ACTIVITÉ
 ═══════════════════════════════════════════════ -->
@@ -63,6 +68,7 @@
     </div>
   </div>
   <div class="header-right">
+    <button id="btn-logout" class="btn-icon hidden" title="Se déconnecter">👤</button>
     <button id="btn-welcome-home" class="btn-icon" title="Accueil — Choisir une activité">🏠</button>
     <button id="btn-network-status" class="btn-icon" title="Statut réseau">📶</button>
     <button id="btn-vehicle-quick" class="btn-icon" title="Mon véhicule">🚗</button>
@@ -202,6 +208,16 @@
         <button id="btn-track-export" class="track-btn track-btn-secondary hidden" title="Exporter GPX">⬇ GPX</button>
         <button id="btn-track-visibility" class="track-btn track-btn-secondary hidden" title="Visibilité">🔒 Privé</button>
         <button id="btn-voice-coach" class="track-btn track-btn-secondary" title="Coaching vocal ON/OFF">🔇 Son</button>
+        <button id="btn-track-history" class="track-btn track-btn-secondary" title="Historique des parcours">📋 Historique</button>
+      </div>
+
+      <!-- Historique parcours GPS -->
+      <div id="track-history-panel" class="track-history-panel hidden">
+        <div class="track-history-header">
+          <span>📍 Mes parcours</span>
+          <button id="btn-track-history-close" class="btn-icon" title="Fermer">✕</button>
+        </div>
+        <div id="track-history-list" class="track-history-list"></div>
       </div>
     </div>
   </section>
