@@ -2,7 +2,7 @@
    BLOC 01 — INDEXEDDB SETUP
    ========================================================= */
 const DB_NAME = 'sorties-nimes-db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let _db = null;
 
 const STORES = {
@@ -12,7 +12,9 @@ const STORES = {
   NAS_CONFIG: 'nas_config',
   SYNC_QUEUE: 'sync_queue',
   CACHE: 'cache',
-  GPS_CORRECTIONS: 'gps_corrections'
+  GPS_CORRECTIONS: 'gps_corrections',
+  TRACK_SESSIONS: 'track_sessions',
+  TRACK_POINTS: 'track_points'
 };
 
 export { STORES };
@@ -46,6 +48,13 @@ export function openDB() {
       }
       if (!db.objectStoreNames.contains(STORES.GPS_CORRECTIONS)) {
         db.createObjectStore(STORES.GPS_CORRECTIONS, { keyPath: 'site_id' });
+      }
+      if (!db.objectStoreNames.contains(STORES.TRACK_SESSIONS)) {
+        db.createObjectStore(STORES.TRACK_SESSIONS, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORES.TRACK_POINTS)) {
+        const tp = db.createObjectStore(STORES.TRACK_POINTS, { keyPath: 'id', autoIncrement: true });
+        tp.createIndex('session_id', 'session_id', { unique: false });
       }
     };
     req.onsuccess = e => { _db = e.target.result; resolve(_db); };

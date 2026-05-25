@@ -1,7 +1,8 @@
 /* =========================================================
    BLOC 01 — IMPORTS
    ========================================================= */
-import { buildSiteBadges, getSiteStatusColor } from './markers.js';
+import { buildSiteBadges } from './markers.js';
+import { getSiteStatusColor } from './map.js';
 import { formatDistance, formatCurrency, createElement } from './utils.js';
 
 /* =========================================================

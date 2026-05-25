@@ -1,7 +1,7 @@
 /* =========================================================
    BLOC 01 — CONFIGURATION CACHE PWA
    ========================================================= */
-const CACHE_NAME = 'sorties-nimes-v1';
+const CACHE_NAME = 'sorties-nimes-v2';
 const OFFLINE_URL = '/index.html';
 
 const CACHE_ASSETS = [
@@ -40,6 +40,8 @@ const CACHE_ASSETS = [
   '/js/sync-policy.js',
   '/js/network-ui.js',
   '/js/geolocation.js',
+  '/js/tracker.js',
+  '/js/welcome.js',
   '/js/navigation.js',
   '/js/nearby.js',
   '/js/thematic-search.js',

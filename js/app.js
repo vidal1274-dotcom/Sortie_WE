@@ -2,7 +2,7 @@
    BLOC 01 — IMPORTS PRINCIPAUX
    ========================================================= */
 import { loadSites, cacheSitesLocally, getDataStats, applyManualGpsCorrection, recalcDistances } from './data-loader.js';
-import { initMap, fitBoundsToSites, flyToSite, showUserLocationMarker, clearUserLocationMarker } from './map.js';
+import { initMap, fitBoundsToSites, flyToSite, showUserLocationMarker, clearUserLocationMarker, renderTrack, clearTrack, addTrackPoint, toggleMapLayer, isSatelliteMode } from './map.js';
 import { renderSiteMarkers, buildSiteBadges, focusOnSite } from './markers.js';
 import { applyFilter, applyTextFilter, applyDistanceFilter, sortSites, initFilterChips, setProcheThreshold } from './filters.js';
 import { requestUserLocation, getStoredOrigin, saveOrigin, clearUserLocation, getStoredMaxKm, saveMaxKm, isUsingGps, ORIGIN_DEFAULT } from './geolocation.js';
@@ -18,10 +18,12 @@ import { loadAllPhotos, importPhotos } from './photos.js';
 import { renderPhotoMarkers } from './photo-map.js';
 import { syncPendingPhotos, getSyncStatus, setupAutoSync, schedulePhotoForSync } from './photo-sync.js';
 import { lsGet, lsSet } from './storage.js';
+import { startTracking, stopTracking, isTracking, loadTrackPoints, getAllSessions, updateSessionVisibility, exportAsGPX, getActiveSessionId, getLiveStats, calculateWaterNeeds, getActivityConfig, getActivityModes } from './tracker.js';
 import { showToast } from './utils.js';
 import { buildVerificationLinks } from './energy-rules.js';
 import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
+import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 
 /* =========================================================
    BLOC 02 — ÉTAT APPLICATIF LOCAL
@@ -89,6 +91,19 @@ async function init() {
 
   // Barre localisation + slider distance
   initLocationBar();
+
+  // Écran d'accueil
+  initWelcomeScreen(onWelcomeModeSelect);
+
+  // Enregistrement de parcours GPS
+  initTrackingUI();
+
+  // Bascule couche carte
+  document.getElementById('btn-map-layer')?.addEventListener('click', () => {
+    const isSat = toggleMapLayer();
+    const btn = document.getElementById('btn-map-layer');
+    if (btn) btn.textContent = isSat ? '🗺️ Carte' : '🛰️ Satellite';
+  });
 
   // Bouton surprise
   document.getElementById('btn-surprise')?.addEventListener('click', onSurpriseClick);
@@ -504,6 +519,315 @@ function renderEnergyVerificationLinks() {
 }
 
 /* =========================================================
-   BLOC 11 — DÉMARRAGE
+   BLOC 10b — SÉLECTION MODE ACCUEIL
+   ========================================================= */
+function onWelcomeModeSelect(mode) {
+  if (!mode) return;
+  switchToPanel(mode.panel);
+
+  if (mode.trackMode) {
+    document.querySelectorAll('.activity-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode.trackMode);
+    });
+  }
+
+  if (mode.id === 'car') {
+    _filteredSites = sortSites([..._sites], 'distance');
+    renderAll();
+  } else if (mode.id === 'map' || mode.trackMode) {
+    fitBoundsToSites(_filteredSites);
+  } else if (mode.id === 'deals') {
+    renderEconomyPanel(getBestDeals(_filteredSites, 30));
+  }
+}
+
+/* =========================================================
+   BLOC 11 — SUIVI GPS (tracé parcours)
+   ========================================================= */
+function initTrackingUI() {
+  const btnToggle  = document.getElementById('btn-track-toggle');
+  const btnExport  = document.getElementById('btn-track-export');
+  const btnVis     = document.getElementById('btn-track-visibility');
+  const trackInfo  = document.getElementById('track-info');
+  const trackLabel = document.getElementById('track-label');
+  const trackIcon  = btnToggle?.querySelector('.track-icon');
+  const timerEl    = document.getElementById('track-timer');
+  const metricsEl  = document.getElementById('sport-metrics');
+  const tempSlider = document.getElementById('temp-slider');
+  const tempDisplay = document.getElementById('temp-display');
+  const weightInput = document.getElementById('weight-input');
+  const btnVoice    = document.getElementById('btn-voice-coach');
+  let _weightKg     = parseInt(localStorage.getItem('sorties_weight_kg') || '70', 10);
+  let _voiceEnabled = false;
+  let _lastVoiceKm  = 0;
+  let _lastWaterReminderMin = 0;
+  if (weightInput) weightInput.value = _weightKg;
+
+  let _timerInterval = null;
+  let _startTime     = null;
+  let _isPublic      = false;
+  let _activityMode  = 'running';
+  let _tempCelsius   = 20;
+
+  // Sélecteur activité
+  document.querySelectorAll('.activity-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (isTracking()) return;
+      document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _activityMode = btn.dataset.mode;
+    });
+  });
+
+  // Slider température
+  tempSlider?.addEventListener('input', () => {
+    _tempCelsius = parseInt(tempSlider.value, 10);
+    if (tempDisplay) {
+      const color = _tempCelsius >= 30 ? '#e74c3c' : _tempCelsius >= 25 ? '#f5a623' : '#5dade2';
+      tempDisplay.textContent = `${_tempCelsius}°C`;
+      tempDisplay.style.color = color;
+    }
+  });
+
+  // Poids
+  weightInput?.addEventListener('change', () => {
+    _weightKg = parseInt(weightInput.value, 10) || 70;
+    localStorage.setItem('sorties_weight_kg', String(_weightKg));
+  });
+
+  // Coaching vocal
+  btnVoice?.addEventListener('click', () => {
+    _voiceEnabled = !_voiceEnabled;
+    if (btnVoice) btnVoice.textContent = _voiceEnabled ? '🔊 Son' : '🔇 Son';
+    if (_voiceEnabled && 'speechSynthesis' in window) {
+      speak('Coaching vocal activé');
+    }
+  });
+
+  function speak(text) {
+    if (!_voiceEnabled || !('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'fr-FR';
+    utter.rate = 1.0;
+    utter.volume = 0.9;
+    window.speechSynthesis.speak(utter);
+  }
+
+  function formatTimer(startTime) {
+    const s = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return h > 0
+      ? `${h}h${String(m).padStart(2,'0')}`
+      : `${m}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function formatPace(paceMinKm) {
+    if (!paceMinKm || paceMinKm > 60) return '—';
+    const min = Math.floor(paceMinKm);
+    const sec = Math.round((paceMinKm - min) * 60);
+    return `${min}'${String(sec).padStart(2,'0')}"`;
+  }
+
+  function getPaceZoneClass(paceMinKm) {
+    if (!paceMinKm) return '';
+    if (paceMinKm < 4.5)  return 'pace-intense';
+    if (paceMinKm < 5.5)  return 'pace-hard';
+    if (paceMinKm < 7.0)  return 'pace-moderate';
+    return 'pace-easy';
+  }
+
+  function updateMetrics() {
+    if (!_startTime) return;
+    const stats = getLiveStats();
+    const durationMin = (Date.now() - _startTime) / 60000;
+    const water = calculateWaterNeeds(_activityMode, durationMin, _tempCelsius);
+
+    if (timerEl) timerEl.textContent = formatTimer(_startTime);
+
+    const distEl  = document.getElementById('metric-distance');
+    const speedEl = document.getElementById('metric-speed');
+    const paceEl  = document.getElementById('metric-pace');
+    const elevEl  = document.getElementById('metric-elev');
+    const waterEl = document.getElementById('water-advice');
+
+    if (distEl)  distEl.textContent  = stats.distanceKm.toFixed(2);
+    if (speedEl) speedEl.textContent = stats.speedKmh.toFixed(1);
+    if (paceEl)  paceEl.textContent  = formatPace(stats.paceMinKm);
+    if (elevEl)  elevEl.textContent  = `+${stats.elevGainM}`;
+
+    // Zone d'allure (couleur)
+    if (paceEl) {
+      paceEl.className = 'metric-value ' + getPaceZoneClass(stats.paceMinKm);
+    }
+
+    // Calories
+    const calEl = document.getElementById('metric-calories');
+    if (calEl) calEl.textContent = stats.calories || 0;
+
+    // Auto-pause badge
+    if (distEl) distEl.style.opacity = stats.autoPaused ? '0.5' : '1';
+
+    // Alertes vocales — split km
+    if (stats.splits && stats.splits.length > _lastVoiceKm) {
+      const split = stats.splits[stats.splits.length - 1];
+      const paceStr = split.paceMinKm ? formatPace(split.paceMinKm) : '';
+      speak(`Kilomètre ${split.km} — allure ${paceStr}`);
+      _lastVoiceKm = stats.splits.length;
+    }
+
+    // Rappel eau toutes les 20 min
+    const durationMin = (Date.now() - _startTime) / 60000;
+    if (durationMin - _lastWaterReminderMin >= 20 && _lastWaterReminderMin >= 0) {
+      const water2 = calculateWaterNeeds(_activityMode, durationMin, _tempCelsius);
+      speak(`N'oublie pas de boire. Objectif ${water2.mlPerHour} millilitres par heure.`);
+      _lastWaterReminderMin = durationMin;
+    }
+
+    if (waterEl) {
+      const totalL = (water.totalMl / 1000).toFixed(2);
+      waterEl.textContent = `Boire ${water.mlPerHour} mL/h · total recommandé ${totalL} L`;
+    }
+  }
+
+  function setActiveUI(active) {
+    if (btnToggle) {
+      btnToggle.classList.toggle('track-recording', active);
+      if (trackIcon) trackIcon.textContent = active ? '⏹' : '⏺';
+      if (trackLabel) trackLabel.textContent = active ? 'Stop' : 'Enregistrer';
+    }
+    trackInfo?.classList.toggle('hidden', !active);
+    btnExport?.classList.toggle('hidden', !active);
+    btnVis?.classList.toggle('hidden', !active);
+    metricsEl?.classList.toggle('hidden', !active);
+    // Bloquer le changement d'activité pendant l'enregistrement
+    document.querySelectorAll('.activity-btn').forEach(b => {
+      b.style.pointerEvents = active ? 'none' : '';
+      b.style.opacity = active ? '0.5' : '';
+    });
+    const tempCtrl = document.querySelector('.temp-control');
+    if (tempCtrl) tempCtrl.style.opacity = active ? '0.5' : '';
+    if (tempSlider) tempSlider.disabled = active;
+  }
+
+  function updateVisibilityBtn() {
+    if (btnVis) {
+      btnVis.textContent = _isPublic ? '🌍 Public' : '🔒 Privé';
+      btnVis.title = _isPublic ? 'Cliquer pour rendre privé' : 'Cliquer pour rendre public';
+    }
+  }
+
+  btnToggle?.addEventListener('click', async () => {
+    if (isTracking()) {
+      clearInterval(_timerInterval);
+      _timerInterval = null;
+      // Résumé fin de séance
+      const sid  = getActiveSessionId();
+      const pts  = sid ? await loadTrackPoints(sid) : [];
+      const stat = getLiveStats();
+      showRunSummary(stat, _activityMode, _tempCelsius, _weightKg);
+      _startTime = null;
+      await stopTracking();
+      setActiveUI(false);
+      clearTrack();
+      showToast('Parcours arrêté et sauvegardé.', 'success');
+    } else {
+      const cfg = getActivityConfig(_activityMode);
+      const defaultLabel = `${cfg.emoji} ${cfg.label} — ${new Date().toLocaleDateString('fr-FR')}`;
+      const label = prompt('Nom du parcours :', defaultLabel) || defaultLabel;
+      await startTracking(label, _isPublic, _activityMode, _tempCelsius, _weightKg);
+      _lastVoiceKm = 0;
+      _lastWaterReminderMin = 0;
+      _startTime = Date.now();
+      setActiveUI(true);
+      updateVisibilityBtn();
+      updateMetrics();
+      _timerInterval = setInterval(async () => {
+        updateMetrics();
+        const sid = getActiveSessionId();
+        if (sid) {
+          const pts = await loadTrackPoints(sid);
+          renderTrack(pts);
+        }
+      }, 5000);
+      showToast(`${cfg.emoji} ${cfg.label} démarré — GPS toutes les ${cfg.interval_ms >= 3600000 ? '60 min' : cfg.interval_ms >= 60000 ? Math.round(cfg.interval_ms/60000) + ' min' : Math.round(cfg.interval_ms/1000) + ' sec'}.`, 'info', 4000);
+    }
+  });
+
+  btnExport?.addEventListener('click', async () => {
+    const sid = getActiveSessionId();
+    if (!sid) return;
+    const pts = await loadTrackPoints(sid);
+    if (!pts.length) { showToast('Aucun point enregistré.', 'warning'); return; }
+    const sessions = await getAllSessions();
+    const session  = sessions.find(s => s.id === sid);
+    exportAsGPX(pts, session?.label || 'Parcours');
+    showToast('Fichier GPX téléchargé.', 'success');
+  });
+
+  btnVis?.addEventListener('click', async () => {
+    _isPublic = !_isPublic;
+    updateVisibilityBtn();
+    const sid = getActiveSessionId();
+    if (sid) await updateSessionVisibility(sid, _isPublic);
+    showToast(_isPublic ? '🌍 Parcours public.' : '🔒 Parcours privé.', 'info');
+  });
+}
+
+function showRunSummary(stats, activityMode, tempC, weightKg) {
+  const cfg = getActivityConfig ? getActivityConfig(activityMode) : { emoji: '🏃', label: activityMode };
+  const formatP = (p) => {
+    if (!p || p > 60) return '—';
+    const m = Math.floor(p); const s = Math.round((p - m) * 60);
+    return `${m}'${String(s).padStart(2,'0')}"`;
+  };
+  const splitsHtml = (stats.splits || []).map(sp =>
+    `<div class="split-row"><span class="split-km">Km ${sp.km}</span><span class="split-pace">${formatP(sp.paceMinKm)}</span></div>`
+  ).join('') || '<div style="color:#7a7d99;font-size:12px">Pas assez de points pour les splits</div>';
+
+  const modal   = document.getElementById('site-detail-modal');
+  const content = document.getElementById('site-detail-content');
+  if (!modal || !content) return;
+
+  content.innerHTML = `
+    <div class="run-summary">
+      <h3>${cfg.emoji} Résumé — ${cfg.label}</h3>
+      <div class="summary-grid">
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.distanceKm.toFixed(2)}</span>
+          <span class="summary-stat-label">km</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.speedKmh.toFixed(1)}</span>
+          <span class="summary-stat-label">km/h moy</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${formatP(stats.paceMinKm)}</span>
+          <span class="summary-stat-label">allure moy</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">+${stats.elevGainM} m</span>
+          <span class="summary-stat-label">dénivelé +</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.calories}</span>
+          <span class="summary-stat-label">kcal</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${tempC}°C</span>
+          <span class="summary-stat-label">température</span>
+        </div>
+      </div>
+      <div class="summary-splits">
+        <h4>⏱ Splits par kilomètre</h4>
+        ${splitsHtml}
+      </div>
+    </div>`;
+  modal.classList.remove('hidden');
+}
+
+/* =========================================================
+   BLOC 12 — DÉMARRAGE
    ========================================================= */
 document.addEventListener('DOMContentLoaded', init);
