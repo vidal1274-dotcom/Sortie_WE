@@ -16,7 +16,17 @@ export function renderSiteMarkers(sites, onSiteClick) {
   const withGps = sites.filter(s => s.has_gps);
   withGps.forEach(site => {
     const marker = L.marker([site.lat, site.lon], { icon: createSiteIcon(site) });
-    marker.bindPopup(buildSitePopupHtml(site), { maxWidth: 280, className: 'site-popup' });
+
+    // Tooltip survol — légende rapide
+    marker.bindTooltip(buildSiteTooltipHtml(site), {
+      direction: 'top',
+      offset: [0, -36],
+      opacity: 1,
+      className: 'site-tooltip'
+    });
+
+    // Popup clic — fiche détaillée compacte
+    marker.bindPopup(buildSitePopupHtml(site), { maxWidth: 290, className: 'site-popup' });
     marker.on('click', () => {
       setState({ selectedSite: site });
       if (onSiteClick) onSiteClick(site);
@@ -28,7 +38,25 @@ export function renderSiteMarkers(sites, onSiteClick) {
 }
 
 /* =========================================================
-   BLOC 03 — POPUP HTML
+   BLOC 03 — TOOLTIP SURVOL (légende rapide)
+   ========================================================= */
+function buildSiteTooltipHtml(site) {
+  const dist = site.distance_km != null ? `${site.distance_km} km` : '';
+  const isGratuit = site.gratuit || (site.budget_indicatif || '').toLowerCase().includes('gratu');
+  const sansPeage = site.sans_peage || (site.vigilance || '').toLowerCase().includes('sans p');
+  const tags = [
+    isGratuit ? '<span style="color:#2ecc71;font-weight:700">Gratuit</span>' : null,
+    sansPeage ? '<span style="color:#5dade2">Sans péage</span>' : null,
+    site.eco_score != null ? `<span style="color:#2ecc71">🌿 ${site.eco_score}/100</span>` : null,
+  ].filter(Boolean).join(' · ');
+
+  return `<div style="font-weight:800;font-size:14px;margin-bottom:3px">${site.destination || 'Site'}</div>
+    <div style="font-size:12px;color:#a0a0b0;margin-bottom:4px">${site.secteur || ''} ${dist ? '· ' + dist : ''}</div>
+    ${tags ? `<div style="font-size:12px">${tags}</div>` : ''}`;
+}
+
+/* =========================================================
+   BLOC 04 — POPUP HTML (clic)
    ========================================================= */
 function buildSitePopupHtml(site) {
   const badges = buildSiteBadges(site);
@@ -48,7 +76,7 @@ function buildSitePopupHtml(site) {
 }
 
 /* =========================================================
-   BLOC 04 — BADGES SITE
+   BLOC 05 — BADGES SITE
    ========================================================= */
 export function buildSiteBadges(site) {
   const tags = [];
@@ -74,7 +102,7 @@ export function buildSiteBadges(site) {
 }
 
 /* =========================================================
-   BLOC 05 — FOCUS SUR UN SITE
+   BLOC 06 — FOCUS SUR UN SITE
    ========================================================= */
 export function focusOnSite(site) {
   if (!site?.has_gps) return;
