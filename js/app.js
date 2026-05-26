@@ -25,6 +25,8 @@ import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
 import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 import { initAuthScreen, logout, getCurrentUser } from './auth.js';
+import { fetchWeather } from './weather.js';
+import { renderCarnet, saveJournalToSession, calcCarnetStats } from './carnet.js';
 
 /* =========================================================
    BLOC 02 — ÉTAT APPLICATIF LOCAL
@@ -169,10 +171,16 @@ async function startApp() {
       .catch(e => console.warn('[app] Service Worker non enregistré', e));
   }
 
-  // Fermeture modale
+  // Fermeture modales
   document.getElementById('modal-close-btn')?.addEventListener('click', closeSiteDetail);
   document.getElementById('day-plan-close-btn')?.addEventListener('click', () => {
     document.getElementById('day-plan-modal')?.classList.add('hidden');
+  });
+  document.getElementById('journal-modal-close')?.addEventListener('click', () => {
+    document.getElementById('journal-modal')?.classList.add('hidden');
+  });
+  document.getElementById('journal-modal-overlay')?.addEventListener('click', () => {
+    document.getElementById('journal-modal')?.classList.add('hidden');
   });
 }
 
@@ -336,6 +344,20 @@ function onPanelChange(panelId) {
     setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 50);
   }
   if (panelId === 'panel-photos') updatePhotoPanel();
+  if (panelId === 'panel-carnet') {
+    const container = document.getElementById('carnet-container');
+    if (container) renderCarnet(container, { onShowOnMap: onCarnetShowOnMap });
+  }
+}
+
+async function onCarnetShowOnMap(sessionId) {
+  const { loadTrackPoints } = await import('./tracker.js');
+  const pts = await loadTrackPoints(sessionId);
+  if (!pts.length) { showToast('Aucun point GPS enregistré.', 'warning'); return; }
+  renderTrack(pts);
+  switchToPanel('panel-map');
+  setTimeout(() => { invalidateMapSize(); }, 100);
+  showToast('Parcours affiché sur la carte.', 'success');
 }
 
 /* =========================================================
@@ -745,21 +767,23 @@ function initTrackingUI() {
     if (isTracking()) {
       clearInterval(_timerInterval);
       _timerInterval = null;
-      // Résumé fin de séance
-      const sid  = getActiveSessionId();
-      const pts  = sid ? await loadTrackPoints(sid) : [];
       const stat = getLiveStats();
-      showRunSummary(stat, _activityMode, _tempCelsius, _weightKg);
       _startTime = null;
-      await stopTracking();
+      const finishedSid = await stopTracking();
+      // Sauvegarder les calories finales dans la session
+      if (finishedSid && stat.calories > 0) {
+        await saveJournalToSession(finishedSid, { final_calories: stat.calories });
+      }
       setActiveUI(false);
       clearTrack();
+      // Afficher le résumé enrichi + journal (style Polarsteps)
+      showRunSummaryWithJournal(stat, _activityMode, _tempCelsius, _weightKg, finishedSid);
       showToast('Parcours arrêté et sauvegardé.', 'success');
     } else {
       const cfg = getActivityConfig(_activityMode);
       const defaultLabel = `${cfg.emoji} ${cfg.label} — ${new Date().toLocaleDateString('fr-FR')}`;
       const label = prompt('Nom du parcours :', defaultLabel) || defaultLabel;
-      await startTracking(label, _isPublic, _activityMode, _tempCelsius, _weightKg);
+      const newSid = await startTracking(label, _isPublic, _activityMode, _tempCelsius, _weightKg);
       _lastVoiceKm = 0;
       _lastWaterReminderMin = 0;
       _startTime = Date.now();
@@ -775,6 +799,8 @@ function initTrackingUI() {
         }
       }, 5000);
       showToast(`${cfg.emoji} ${cfg.label} démarré — GPS toutes les ${cfg.interval_ms >= 3600000 ? '60 min' : cfg.interval_ms >= 60000 ? Math.round(cfg.interval_ms/60000) + ' min' : Math.round(cfg.interval_ms/1000) + ' sec'}.`, 'info', 4000);
+      // Météo automatique au démarrage (style Polarsteps)
+      _fetchWeatherForSession(newSid);
     }
   });
 
@@ -855,6 +881,116 @@ function initTrackingUI() {
     }
   });
   btnHistoryClose?.addEventListener('click', () => historyPanel?.classList.add('hidden'));
+}
+
+/* ── Météo automatique (style Polarsteps : récupère la météo au démarrage) ── */
+async function _fetchWeatherForSession(sessionId) {
+  if (!sessionId) return;
+  try {
+    const { getStoredOrigin } = await import('./geolocation.js');
+    const origin = getStoredOrigin();
+    if (!origin || !origin.lat) return;
+    const weather = await fetchWeather(origin.lat, origin.lon);
+    if (weather) {
+      await saveJournalToSession(sessionId, {
+        weather_emoji: weather.emoji,
+        weather_temp: weather.temp
+      });
+      showToast(`Météo : ${weather.emoji} ${weather.temp}°C — enregistrée pour cette sortie.`, 'info', 3000);
+    }
+  } catch { /* météo optionnelle */ }
+}
+
+/* ── Résumé enrichi + journal post-sortie (style Polarsteps) ── */
+function showRunSummaryWithJournal(stats, activityMode, tempC, weightKg, sessionId) {
+  const cfg = getActivityConfig ? getActivityConfig(activityMode) : { emoji: '🏃', label: activityMode };
+  const formatP = (p) => {
+    if (!p || p > 60) return '—';
+    const m = Math.floor(p); const s = Math.round((p - m) * 60);
+    return `${m}'${String(s).padStart(2,'0')}"`;
+  };
+  const splitsHtml = (stats.splits || []).map(sp =>
+    `<div class="split-row"><span class="split-km">Km ${sp.km}</span><span class="split-pace">${formatP(sp.paceMinKm)}</span></div>`
+  ).join('') || '<div style="color:#7a7d99;font-size:12px">Pas assez de points pour les splits</div>';
+
+  const MOODS = ['😊','💪','😌','🥵','😴','🌟','😰'];
+  const moodHtml = MOODS.map(m =>
+    `<button class="mood-btn post-mood-btn" data-mood="${m}" data-sid="${sessionId || ''}">${m}</button>`
+  ).join('');
+
+  const modal   = document.getElementById('journal-modal');
+  const content = document.getElementById('journal-modal-content');
+  if (!modal || !content) return;
+
+  content.innerHTML = `
+    <div class="run-summary">
+      <h3>${cfg.emoji} Bilan — ${cfg.label}</h3>
+      <div class="summary-grid">
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.distanceKm.toFixed(2)}</span>
+          <span class="summary-stat-label">km</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.speedKmh.toFixed(1)}</span>
+          <span class="summary-stat-label">km/h moy</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${formatP(stats.paceMinKm)}</span>
+          <span class="summary-stat-label">allure moy</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">+${stats.elevGainM} m</span>
+          <span class="summary-stat-label">dénivelé +</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${stats.calories}</span>
+          <span class="summary-stat-label">kcal</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-value">${tempC}°C</span>
+          <span class="summary-stat-label">température</span>
+        </div>
+      </div>
+      <div class="summary-splits">
+        <h4>⏱ Splits par kilomètre</h4>
+        ${splitsHtml}
+      </div>
+
+      <!-- Journal post-sortie style Polarsteps -->
+      <div class="post-journal">
+        <h4>📔 Mon journal de sortie</h4>
+        <div class="journal-block">
+          <div class="journal-block-label">Comment tu te sens ?</div>
+          <div class="mood-picker post-mood-picker" data-sid="${sessionId || ''}">${moodHtml}</div>
+        </div>
+        <div class="journal-block">
+          <div class="journal-block-label">Notes & souvenirs ✍️</div>
+          <textarea id="post-journal-notes" class="carnet-notes-input"
+            placeholder="Raconte ta sortie… lieux traversés, sensations, personnes croisées, anecdotes…" rows="4"></textarea>
+        </div>
+        <button class="btn-primary post-journal-save" id="btn-save-post-journal">💾 Enregistrer dans le carnet</button>
+        <div id="post-journal-status" style="margin-top:8px;font-size:13px;color:#2ecc71"></div>
+      </div>
+    </div>`;
+
+  modal.classList.remove('hidden');
+
+  // Bindings journal post-sortie
+  content.querySelectorAll('.post-mood-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      content.querySelectorAll('.post-mood-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (sessionId) await saveJournalToSession(sessionId, { journal_mood: btn.dataset.mood });
+    });
+  });
+
+  document.getElementById('btn-save-post-journal')?.addEventListener('click', async () => {
+    const notes = document.getElementById('post-journal-notes')?.value || '';
+    if (sessionId && notes) await saveJournalToSession(sessionId, { journal_notes: notes });
+    const status = document.getElementById('post-journal-status');
+    if (status) status.textContent = '✅ Journal enregistré dans votre carnet !';
+    showToast('Journal sauvegardé dans votre carnet.', 'success');
+  });
 }
 
 function showRunSummary(stats, activityMode, tempC, weightKg) {

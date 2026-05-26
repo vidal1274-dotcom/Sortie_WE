@@ -88,6 +88,7 @@
   <button class="nav-tab active" data-panel="panel-map">🗺️ Carte</button>
   <button class="nav-tab" data-panel="panel-list">📋 Liste</button>
   <button class="nav-tab" data-panel="panel-economy">💰 Bons plans</button>
+  <button class="nav-tab" data-panel="panel-carnet">📔 Carnet</button>
   <button class="nav-tab" data-panel="panel-photos">📷 Photos</button>
   <button class="nav-tab" data-panel="panel-settings">⚙️ Paramètres</button>
 </nav>
@@ -244,6 +245,11 @@
     <div id="economy-list" class="economy-list"></div>
   </section>
 
+  <!-- Panneau Carnet de Sorties (style Polarsteps) -->
+  <section id="panel-carnet" class="panel">
+    <div id="carnet-container"></div>
+  </section>
+
   <!-- Panneau Photos -->
   <section id="panel-photos" class="panel">
     <div class="panel-header">
@@ -385,6 +391,17 @@
   <div class="modal-content modal-wide">
     <button class="modal-close" id="day-plan-close-btn">✕</button>
     <div id="day-plan-content"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MODALE JOURNAL POST-SORTIE (style Polarsteps)
+═══════════════════════════════════════════════ -->
+<div id="journal-modal" class="modal hidden">
+  <div class="modal-overlay" id="journal-modal-overlay"></div>
+  <div class="modal-content modal-journal">
+    <button class="modal-close" id="journal-modal-close">✕</button>
+    <div id="journal-modal-content"></div>
   </div>
 </div>
 
