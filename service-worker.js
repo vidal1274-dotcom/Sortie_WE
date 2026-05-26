@@ -1,7 +1,7 @@
 /* =========================================================
    BLOC 01 — CONFIGURATION CACHE PWA
    ========================================================= */
-const CACHE_NAME = 'sorties-nimes-v5';
+const CACHE_NAME = 'sorties-nimes-v6';
 const OFFLINE_URL = '/index.html';
 
 const CACHE_ASSETS = [
@@ -91,8 +91,7 @@ self.addEventListener('fetch', event => {
   // Réseau externe non géré en cache
   if (!url.origin.includes(self.location.origin)
     && !url.hostname.includes('unpkg.com')
-    && !url.hostname.includes('openstreetmap.org')
-    && !url.hostname.includes('open-meteo.com')) {
+    && !url.hostname.includes('openstreetmap.org')) {
     return;
   }
 

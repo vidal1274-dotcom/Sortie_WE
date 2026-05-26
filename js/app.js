@@ -887,7 +887,6 @@ function initTrackingUI() {
 async function _fetchWeatherForSession(sessionId) {
   if (!sessionId) return;
   try {
-    const { getStoredOrigin } = await import('./geolocation.js');
     const origin = getStoredOrigin();
     if (!origin || !origin.lat) return;
     const weather = await fetchWeather(origin.lat, origin.lon);
@@ -898,7 +897,7 @@ async function _fetchWeatherForSession(sessionId) {
       });
       showToast(`Météo : ${weather.emoji} ${weather.temp}°C — enregistrée pour cette sortie.`, 'info', 3000);
     }
-  } catch { /* météo optionnelle */ }
+  } catch(e) { /* météo optionnelle */ }
 }
 
 /* ── Résumé enrichi + journal post-sortie (style Polarsteps) ── */

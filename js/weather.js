@@ -28,7 +28,7 @@ export async function fetchWeather(lat, lon) {
       emoji: WMO_EMOJI[c.weather_code] || '🌡️',
       code: c.weather_code
     };
-  } catch {
+  } catch(e) {
     return null;
   }
 }
