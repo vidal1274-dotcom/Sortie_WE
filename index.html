@@ -418,6 +418,19 @@
 <!-- exifr pour lecture GPS EXIF -->
 <script src="assets/vendor/exifr.min.js"></script>
 
+<!-- Erreur critique visible sur GSM -->
+<script>
+window.addEventListener('error', function(e) {
+  var d = document.getElementById('critical-error');
+  if (d) { d.style.display='block'; d.textContent = '⚠️ JS Error: ' + e.message + ' (' + (e.filename||'').split('/').pop() + ':' + e.lineno + ')'; }
+});
+window.addEventListener('unhandledrejection', function(e) {
+  var d = document.getElementById('critical-error');
+  if (d) { d.style.display='block'; d.textContent = '⚠️ Module Error: ' + e.reason; }
+});
+</script>
+<div id="critical-error" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#e74c3c;color:#fff;padding:12px;font-size:13px;z-index:99999;word-break:break-all;white-space:pre-wrap"></div>
+
 <!-- Modules JS (ESM) -->
 <script type="module" src="js/app.js?v=4"></script>
 
