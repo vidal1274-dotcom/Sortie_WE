@@ -112,6 +112,7 @@ async function startApp() {
   initLocationBar();
 
   initWelcomeScreen(onWelcomeModeSelect);
+  showWelcomeScreen();
 
   // Enregistrement de parcours GPS
   initTrackingUI();

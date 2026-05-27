@@ -114,8 +114,7 @@ export function initWelcomeScreen(onModeSelect) {
   // Bouton retour accueil (header)
   document.getElementById('btn-welcome-home')?.addEventListener('click', showWelcomeScreen);
 
-  // Afficher l'écran d'accueil au démarrage
-  showWelcomeScreen();
+  // (showWelcomeScreen est appelé depuis app.js après init)
 }
 
 export function showWelcomeScreen() {
