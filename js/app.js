@@ -52,7 +52,10 @@ let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
    BLOC 03 — INITIALISATION PRINCIPALE
    ========================================================= */
 async function init() {
+  const _dbg = document.getElementById('dbg');
+  if (_dbg) _dbg.textContent = 'HTML✓ CSS✓ JS✓ — init()…';
   initAuthScreen(async (user) => {
+  if (_dbg) _dbg.textContent = 'auth OK — startApp()…';
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
       logoutBtn.classList.remove('hidden');
