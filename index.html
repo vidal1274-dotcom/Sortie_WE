@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script>if(!location.search.includes('v=')){location.replace('./?v='+Date.now());}</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#e94560" />
@@ -11,17 +12,17 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="assets/vendor/leaflet.css" />
 </head>
 <body>
 <style>
-/* Sécurité : cacher les overlays même si styles.css échoue */
 .hidden{display:none!important}
 #welcome-screen{display:none!important}
 #auth-screen{display:none!important}
+#map{background:#b3d4f5!important}
 </style>
 
 <!-- AUTH SCREEN -->
@@ -450,7 +451,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 </script>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=13"></script>
+<script type="module" src="js/app.js?v=14"></script>
 
 </body>
 </html>
