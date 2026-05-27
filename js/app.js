@@ -112,8 +112,6 @@ async function startApp() {
   initLocationBar();
 
   initWelcomeScreen(onWelcomeModeSelect);
-  switchToPanel('panel-map');
-  setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 300);
 
   // Enregistrement de parcours GPS
   initTrackingUI();

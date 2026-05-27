@@ -114,10 +114,8 @@ export function initWelcomeScreen(onModeSelect) {
   // Bouton retour accueil (header)
   document.getElementById('btn-welcome-home')?.addEventListener('click', showWelcomeScreen);
 
-  // Démarrage direct — on va toujours sur la carte sans passer par l'écran d'accueil
-  const lastMode = localStorage.getItem(LS_KEY_LAST_MODE);
-  const mode = MODES.find(m => m.id === lastMode) || MODES.find(m => m.id === 'map');
-  if (onModeSelect && mode) onModeSelect(mode);
+  // Afficher l'écran d'accueil au démarrage
+  showWelcomeScreen();
 }
 
 export function showWelcomeScreen() {
