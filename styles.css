@@ -484,7 +484,7 @@ html, body {
   gap: 12px;
   align-items: flex-start;
   box-shadow: var(--shadow-card);
-  min-height: 0;
+  min-height: 72px;
 }
 .site-card::before {
   content: '';
@@ -2433,6 +2433,71 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 .post-journal h4    { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
 .post-mood-picker   { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .post-journal-save  { width: 100%; margin-top: 12px; padding: 12px; }
+
+/* =========================================================
+   BLOC — CARTE SITE REDESIGN
+   ========================================================= */
+.sc-body { flex: 1; min-width: 0; }
+.sc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.sc-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-text);
+  flex: 1;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.sc-closed { opacity: 0.45; text-decoration: line-through; }
+.sc-dist {
+  background: var(--color-card2);
+  border: 1px solid var(--color-border2);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-mid);
+  padding: 2px 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.sc-type {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-mid);
+}
+.sc-summary {
+  font-size: 12.5px;
+  color: var(--color-text-dim);
+  line-height: 1.42;
+  margin-top: 2px;
+}
+.sc-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.sc-green  { background: rgba(46,204,113,0.15); color: #2ecc71; }
+.sc-orange { background: rgba(245,166,35,0.15); color: #f5a623; }
+.sc-blue   { background: rgba(52,152,219,0.15); color: #3498db; }
+.sc-yellow { background: rgba(241,196,15,0.15); color: #f1c40f; }
+.sc-red    { background: rgba(231,76,60,0.15);  color: #e74c3c; }
+.sc-dim    { background: var(--color-card2);    color: var(--color-text-mid); }
+.sc-card-closed { opacity: 0.65; }
 
 /* =========================================================
    BLOC — SITES VISITÉS

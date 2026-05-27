@@ -12,7 +12,7 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="assets/vendor/leaflet.css" />
@@ -76,7 +76,6 @@
     <button id="btn-logout" class="btn-icon hidden" title="Se déconnecter">👤</button>
     <button id="btn-welcome-home" class="btn-icon" title="Accueil — Choisir une activité">🏠</button>
     <button id="btn-network-status" class="btn-icon" title="Statut réseau">📶</button>
-    <button id="btn-vehicle-quick" class="btn-icon" title="Mon véhicule">🚗</button>
     <button id="btn-surprise" class="btn-icon" title="Surprenez-moi !" aria-label="Idée surprise">🎲</button>
   </div>
 </header>
@@ -246,7 +245,6 @@
       <button class="eco-filter" data-eco="gratuit">Gratuits</button>
       <button class="eco-filter" data-eco="proche">Proches</button>
       <button class="eco-filter" data-eco="sans_peage">Sans péage</button>
-      <button class="eco-filter" data-eco="electrique">Électrique ✓</button>
     </div>
     <div id="economy-list" class="economy-list"></div>
   </section>
@@ -274,75 +272,6 @@
   <!-- Panneau Paramètres -->
   <section id="panel-settings" class="panel">
     <div class="settings-container">
-
-      <!-- Profil véhicule -->
-      <div class="settings-section" id="section-vehicle">
-        <h3>🚗 Mon véhicule</h3>
-        <div class="vehicle-type-selector">
-          <button class="vtype-btn active" data-vtype="thermal">🔥 Thermique</button>
-          <button class="vtype-btn" data-vtype="electric">⚡ Électrique</button>
-          <button class="vtype-btn" data-vtype="hybrid">⚡🔥 Hybride</button>
-        </div>
-
-        <!-- Paramètres thermique -->
-        <div id="thermal-params" class="vehicle-params">
-          <label>Carburant
-            <select id="fuel-type">
-              <option value="essence">Essence</option>
-              <option value="diesel">Diesel</option>
-              <option value="hybrid_essence">Hybride essence</option>
-              <option value="hybrid_diesel">Hybride diesel</option>
-              <option value="gpl">GPL</option>
-            </select>
-          </label>
-          <label>Consommation (L/100 km)
-            <input type="number" id="thermal-consumption" min="2" max="30" step="0.1" value="6.5" />
-          </label>
-          <label>Prix carburant (€/L) — <span class="verify-tag">à vérifier</span>
-            <input type="number" id="fuel-price" min="0.5" max="5" step="0.01" placeholder="Ex: 1.85" />
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" id="avoid-tolls" checked /> Éviter les péages si possible
-          </label>
-        </div>
-
-        <!-- Paramètres électrique -->
-        <div id="electric-params" class="vehicle-params hidden">
-          <label>Consommation (kWh/100 km)
-            <input type="number" id="ev-consumption" min="5" max="40" step="0.5" value="17" />
-          </label>
-          <label>Mode de recharge
-            <select id="charge-mode">
-              <option value="home">Domicile</option>
-              <option value="public_charger">Borne extérieure</option>
-              <option value="mixed">Mixte</option>
-              <option value="free">Gratuite possible</option>
-            </select>
-          </label>
-          <label>Prix kWh domicile (€) — <span class="verify-tag">à vérifier</span>
-            <input type="number" id="home-kwh-price" min="0.05" max="2" step="0.01" placeholder="Ex: 0.18" />
-          </label>
-          <label>Prix kWh borne (€) — <span class="verify-tag">à vérifier</span>
-            <input type="number" id="public-kwh-price" min="0.1" max="2" step="0.01" placeholder="Ex: 0.45" />
-          </label>
-          <div id="mixed-charge-params">
-            <label>% recharge domicile
-              <input type="range" id="home-charge-ratio" min="0" max="100" value="70" />
-              <span id="home-charge-ratio-display">70%</span>
-            </label>
-          </div>
-          <label>Pertes recharge (%)
-            <input type="number" id="charging-loss" min="0" max="30" step="1" value="10" />
-          </label>
-        </div>
-
-        <label>Marge sécurité trajet (%)
-          <input type="number" id="safety-margin" min="0" max="30" step="1" value="10" />
-        </label>
-        <p class="info-disclaimer">⚠️ Valeurs indicatives. Ajustez selon votre véhicule et les prix réels.</p>
-        <button id="btn-save-vehicle" class="btn-primary">💾 Enregistrer mon véhicule</button>
-        <div id="vehicle-save-status" class="save-status"></div>
-      </div>
 
       <!-- Vérification énergie -->
       <div class="settings-section" id="section-energy-check">
@@ -528,7 +457,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 </script>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=21"></script>
+<script type="module" src="js/app.js?v=22"></script>
 
 </body>
 </html>

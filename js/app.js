@@ -7,7 +7,7 @@ import { renderSiteMarkers, buildSiteBadges, focusOnSite } from './markers.js';
 import { applyFilter, applyTextFilter, applyDistanceFilter, sortSites, initFilterChips, setProcheThreshold } from './filters.js';
 import { requestUserLocation, getStoredOrigin, saveOrigin, clearUserLocation, getStoredMaxKm, saveMaxKm, isUsingGps, ORIGIN_DEFAULT } from './geolocation.js';
 import { enrichSitesWithEcoScore, getBestDeals } from './economy-engine.js';
-import { loadVehicleProfile, saveVehicleProfile, getVehicleLabel, isVehicleConfigured } from './vehicle-profile.js';
+import { loadVehicleProfile } from './vehicle-profile.js';
 import { initGlobalSearch, interpretSearchQuery } from './global-search.js';
 import { openSiteDetail, closeSiteDetail, openGpsEditDialog } from './site-detail.js';
 import { generateSurprise, renderSurpriseCard } from './surprise-engine.js';
@@ -80,8 +80,7 @@ async function startApp() {
 
   initNavTabs(onPanelChange);
   _vehicleProfile = loadVehicleProfile();
-  applyVehicleToUI(_vehicleProfile);
-  initVehicleSettingsUI();
+  initSettingsUI();
 
   showLoading('sites-list', 'Chargement des sites…');
   try {
@@ -137,8 +136,24 @@ async function startApp() {
     document.getElementById('day-plan-modal')?.classList.add('hidden');
   });
 
-  // Bouton véhicule rapide (header)
-  document.getElementById('btn-vehicle-quick')?.addEventListener('click', () => switchToPanel('panel-settings'));
+  // Filtres "Bons plans économiques"
+  document.querySelectorAll('.eco-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.eco-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const eco = btn.dataset.eco;
+      let filtered = [..._filteredSites];
+      if (eco === 'gratuit') {
+        filtered = filtered.filter(s => s.gratuit || (s.budget_indicatif || '').toLowerCase().includes('gratu'));
+      } else if (eco === 'proche') {
+        filtered = filtered.filter(s => s.distance_km != null && s.distance_km <= 30);
+      } else if (eco === 'sans_peage') {
+        const hasSP = s => s.sans_peage || (s.vigilance || '').toLowerCase().includes('sans p');
+        filtered = filtered.filter(hasSP);
+      }
+      renderEconomyPanel(getBestDeals(filtered, 30));
+    });
+  });
 
   // Import/export
   document.getElementById('btn-export-data')?.addEventListener('click', exportAllData);
@@ -405,59 +420,9 @@ function onSurpriseClick() {
 }
 
 /* =========================================================
-   BLOC 08 — PROFIL VÉHICULE UI
+   BLOC 08 — SETTINGS UI (NAS)
    ========================================================= */
-function initVehicleSettingsUI() {
-  // Sélection type véhicule
-  document.querySelectorAll('.vtype-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.vtype-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const vtype = btn.dataset.vtype;
-      document.getElementById('thermal-params')?.classList.toggle('hidden', vtype === 'electric');
-      document.getElementById('electric-params')?.classList.toggle('hidden', vtype === 'thermal');
-    });
-  });
-
-  // Range recharge domicile
-  const rangeEl = document.getElementById('home-charge-ratio');
-  const displayEl = document.getElementById('home-charge-ratio-display');
-  rangeEl?.addEventListener('input', () => {
-    if (displayEl) displayEl.textContent = `${rangeEl.value}%`;
-  });
-
-  // Mode recharge
-  document.getElementById('charge-mode')?.addEventListener('change', e => {
-    const mixed = document.getElementById('mixed-charge-params');
-    if (mixed) mixed.style.display = e.target.value === 'mixed' ? 'block' : 'none';
-  });
-
-  // Enregistrer véhicule
-  document.getElementById('btn-save-vehicle')?.addEventListener('click', () => {
-    const vtype = document.querySelector('.vtype-btn.active')?.dataset.vtype || 'unknown';
-    const profile = {
-      vehicle_type: vtype,
-      fuel_type: document.getElementById('fuel-type')?.value || 'essence',
-      thermal_consumption_l_100: parseFloat(document.getElementById('thermal-consumption')?.value) || 6.5,
-      electric_consumption_kwh_100: parseFloat(document.getElementById('ev-consumption')?.value) || 17,
-      fuel_price_per_liter: parseFloat(document.getElementById('fuel-price')?.value) || null,
-      home_kwh_price: parseFloat(document.getElementById('home-kwh-price')?.value) || null,
-      public_kwh_price: parseFloat(document.getElementById('public-kwh-price')?.value) || null,
-      charge_mode: document.getElementById('charge-mode')?.value || 'home',
-      home_charge_ratio: (parseInt(document.getElementById('home-charge-ratio')?.value) || 70) / 100,
-      public_charge_ratio: 1 - ((parseInt(document.getElementById('home-charge-ratio')?.value) || 70) / 100),
-      charging_loss_percent: parseFloat(document.getElementById('charging-loss')?.value) || 10,
-      safety_margin_percent: parseFloat(document.getElementById('safety-margin')?.value) || 10,
-      avoid_tolls: document.getElementById('avoid-tolls')?.checked ?? true
-    };
-    _vehicleProfile = saveVehicleProfile(profile);
-    _sites = enrichSitesWithEcoScore(_sites, _vehicleProfile);
-    renderAll();
-    const status = document.getElementById('vehicle-save-status');
-    if (status) { status.textContent = `✅ Profil enregistré : ${getVehicleLabel(_vehicleProfile)}`; status.style.color = '#27ae60'; }
-    showToast('Véhicule enregistré — coûts recalculés.', 'success');
-  });
-
+function initSettingsUI() {
   // Test NAS
   document.getElementById('btn-test-nas')?.addEventListener('click', async () => {
     const url = document.getElementById('nas-url')?.value?.trim();
@@ -481,33 +446,6 @@ function initVehicleSettingsUI() {
     showToast('Configuration NAS enregistrée.', 'success');
   });
 
-  // Pré-remplir avec profil existant
-  applyVehicleToUI(_vehicleProfile);
-}
-
-function applyVehicleToUI(profile) {
-  if (!profile || profile.vehicle_type === 'unknown') return;
-  const vtypeBtn = document.querySelector(`[data-vtype="${profile.vehicle_type}"]`);
-  if (vtypeBtn) {
-    document.querySelectorAll('.vtype-btn').forEach(b => b.classList.remove('active'));
-    vtypeBtn.classList.add('active');
-  }
-  const thermalEl = document.getElementById('thermal-params');
-  const electricEl = document.getElementById('electric-params');
-  if (thermalEl) thermalEl.classList.toggle('hidden', profile.vehicle_type === 'electric');
-  if (electricEl) electricEl.classList.toggle('hidden', profile.vehicle_type === 'thermal');
-  const setCond = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
-  setCond('fuel-type', profile.fuel_type);
-  setCond('thermal-consumption', profile.thermal_consumption_l_100);
-  setCond('fuel-price', profile.fuel_price_per_liter);
-  setCond('ev-consumption', profile.electric_consumption_kwh_100);
-  setCond('home-kwh-price', profile.home_kwh_price);
-  setCond('public-kwh-price', profile.public_kwh_price);
-  setCond('charge-mode', profile.charge_mode);
-  setCond('charging-loss', profile.charging_loss_percent);
-  setCond('safety-margin', profile.safety_margin_percent);
-  const avoidEl = document.getElementById('avoid-tolls');
-  if (avoidEl) avoidEl.checked = profile.avoid_tolls !== false;
   const nasUrl = lsGet('nas_url');
   if (nasUrl) { const el = document.getElementById('nas-url'); if (el) el.value = nasUrl; }
 }
