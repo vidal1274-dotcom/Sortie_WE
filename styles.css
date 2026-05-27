@@ -467,6 +467,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
 }
 
 /* ---- CARTE SITE ---- */
@@ -483,6 +484,7 @@ html, body {
   gap: 12px;
   align-items: flex-start;
   box-shadow: var(--shadow-card);
+  min-height: 0;
 }
 .site-card::before {
   content: '';
@@ -508,19 +510,22 @@ html, body {
   font-size: 22px;
   flex-shrink: 0;
 }
-.site-card-body { flex: 1; min-width: 0; }
+.site-card-body { flex: 1; min-width: 0; overflow-wrap: break-word; }
 .site-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 3px;
+  flex-wrap: wrap;
 }
 .site-name {
   font-weight: 700;
   font-size: 15px;
   line-height: 1.25;
   color: var(--color-text);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .site-dist-pill {
   background: var(--color-card2);
@@ -546,6 +551,8 @@ html, body {
   font-size: 13px;
   color: var(--color-text-mid);
   line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .site-card-footer {
   display: flex;
@@ -2274,3 +2281,76 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 .post-journal h4    { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
 .post-mood-picker   { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .post-journal-save  { width: 100%; margin-top: 12px; padding: 12px; }
+
+/* =========================================================
+   BLOC — PROGRAMME JOURNÉE
+   ========================================================= */
+.filter-chip-plan {
+  background: linear-gradient(135deg, rgba(233,69,96,0.15), rgba(245,166,35,0.15));
+  border-color: #f5a623 !important;
+  color: #f5a623 !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.filter-chip-plan.has-saved-plan::after { content: ' ✓'; color: #2ecc71; }
+
+.day-plan-wrapper { padding: 16px 16px 24px; }
+.dp-header { margin-bottom: 16px; }
+.dp-title { font-size: 18px; font-weight: 800; color: var(--color-text); margin-bottom: 10px; }
+.dp-meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.dp-badge {
+  background: var(--color-card2);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: var(--color-text-mid);
+}
+.dp-cost-line { font-size: 13px; color: #f5a623; margin-top: 6px; }
+.dp-disclaimer { font-size: 11px; color: var(--color-text-dim); margin-top: 6px; }
+
+.dp-steps { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
+.dp-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--color-border);
+}
+.dp-step:last-child { border-bottom: none; }
+.dp-step:hover { background: var(--color-card2); }
+.dp-step-arrival,
+.dp-step-activity { cursor: pointer; }
+.dp-step-time {
+  min-width: 50px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5a623;
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+.dp-step-icon { font-size: 18px; flex-shrink: 0; padding-top: 1px; }
+.dp-step-body { flex: 1; min-width: 0; }
+.dp-step-label {
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+.dp-step-meta { font-size: 12px; color: var(--color-text-dim); margin-top: 3px; }
+.dp-step-depart .dp-step-time,
+.dp-step-return .dp-step-time { color: var(--color-text-dim); }
+.dp-step-meal .dp-step-time { color: #5dade2; }
+
+.dp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+.dp-btn-delete { color: #e74c3c !important; border-color: #e74c3c !important; }

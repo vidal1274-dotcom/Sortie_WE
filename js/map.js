@@ -199,3 +199,43 @@ export function createPhotoIcon() {
     iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -16], className: ''
   });
 }
+
+/* =========================================================
+   BLOC — TRACÉ PROGRAMME JOURNÉE
+   ========================================================= */
+let _dayPlanPolyline = null;
+let _dayPlanMarkers  = [];
+
+export function renderDayPlanRoute(orderedSites) {
+  if (_dayPlanPolyline) { _map.removeLayer(_dayPlanPolyline); _dayPlanPolyline = null; }
+  _dayPlanMarkers.forEach(m => _map.removeLayer(m));
+  _dayPlanMarkers = [];
+  if (!_map || !orderedSites || !orderedSites.length) return;
+
+  const latlngs = orderedSites.filter(s => s.has_gps && s.lat && s.lon).map(s => [s.lat, s.lon]);
+  if (latlngs.length < 2) return;
+
+  _dayPlanPolyline = L.polyline(latlngs, {
+    color: '#f5a623', weight: 4, opacity: 0.85, dashArray: '10 6', lineJoin: 'round'
+  }).addTo(_map);
+
+  orderedSites.filter(s => s.has_gps && s.lat && s.lon).forEach((site, i) => {
+    const color = i === 0 ? '#27ae60' : i === orderedSites.length - 1 ? '#e94560' : '#f5a623';
+    const icon = L.divIcon({
+      html: `<div style="background:${color};color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.5)">${i + 1}</div>`,
+      iconSize: [26, 26], iconAnchor: [13, 13], className: ''
+    });
+    const m = L.marker([site.lat, site.lon], { icon })
+      .bindPopup(`<strong>${i + 1}. ${site.destination}</strong>`)
+      .addTo(_map);
+    _dayPlanMarkers.push(m);
+  });
+
+  _map.fitBounds(_dayPlanPolyline.getBounds(), { padding: [40, 40] });
+}
+
+export function clearDayPlanRoute() {
+  if (_dayPlanPolyline) { _map.removeLayer(_dayPlanPolyline); _dayPlanPolyline = null; }
+  _dayPlanMarkers.forEach(m => _map.removeLayer(m));
+  _dayPlanMarkers = [];
+}

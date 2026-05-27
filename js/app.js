@@ -2,7 +2,7 @@
    BLOC 01 — IMPORTS PRINCIPAUX
    ========================================================= */
 import { loadSites, cacheSitesLocally, getDataStats, applyManualGpsCorrection, recalcDistances } from './data-loader.js';
-import { initMap, fitBoundsToSites, flyToSite, showUserLocationMarker, clearUserLocationMarker, renderTrack, clearTrack, addTrackPoint, toggleMapLayer, isSatelliteMode, invalidateMapSize } from './map.js';
+import { initMap, fitBoundsToSites, flyToSite, showUserLocationMarker, clearUserLocationMarker, renderTrack, clearTrack, addTrackPoint, toggleMapLayer, isSatelliteMode, invalidateMapSize, renderDayPlanRoute, clearDayPlanRoute } from './map.js';
 import { renderSiteMarkers, buildSiteBadges, focusOnSite } from './markers.js';
 import { applyFilter, applyTextFilter, applyDistanceFilter, sortSites, initFilterChips, setProcheThreshold } from './filters.js';
 import { requestUserLocation, getStoredOrigin, saveOrigin, clearUserLocation, getStoredMaxKm, saveMaxKm, isUsingGps, ORIGIN_DEFAULT } from './geolocation.js';
@@ -25,6 +25,7 @@ import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
 import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 import { initAuthScreen, logout, getCurrentUser } from './auth.js';
+import { generateDayPlan, renderDayPlan, saveDayPlan, loadSavedDayPlan, deleteSavedDayPlan, exportPlanAsText } from './day-plan.js';
 // Imports lazy — chargés à la demande pour ne pas bloquer le démarrage
 let _fetchWeather = null;
 let _renderCarnet = null;
@@ -45,8 +46,9 @@ let _filteredSites = [];
 let _vehicleProfile = null;
 let _currentFilter = 'all';
 let _searchQuery = '';
-let _maxDistanceKm = 100; // 100 km par défaut
-let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
+let _maxDistanceKm = 100;
+let _originCoords  = null;
+let _currentDayPlan = null;
 
 /* =========================================================
    BLOC 03 — INITIALISATION PRINCIPALE
@@ -128,6 +130,12 @@ async function startApp() {
   // Bouton surprise
   document.getElementById('btn-surprise')?.addEventListener('click', onSurpriseClick);
 
+  // Bouton programme journée
+  document.getElementById('btn-day-plan')?.addEventListener('click', onDayPlanClick);
+  document.getElementById('day-plan-close-btn')?.addEventListener('click', () => {
+    document.getElementById('day-plan-modal')?.classList.add('hidden');
+  });
+
   // Bouton véhicule rapide (header)
   document.getElementById('btn-vehicle-quick')?.addEventListener('click', () => switchToPanel('panel-settings'));
 
@@ -170,17 +178,35 @@ async function startApp() {
   };
   window.__addToDayPlan = (siteId) => {
     const site = _sites.find(s => s.id === siteId);
-    if (site) showToast(`${site.destination} ajouté au programme.`, 'success');
+    if (!site) return;
+    if (!site.has_gps) { showToast(`${site.destination} n'a pas de GPS — impossible d'ajouter.`, 'warning'); return; }
+    if (!_currentDayPlan) {
+      _currentDayPlan = generateDayPlan(_sites.filter(s => s.has_gps), _vehicleProfile, { maxKm: 80, minStops: 3, maxStops: 5 });
+    }
+    showToast(`${site.destination} pris en compte dans le programme.`, 'success');
+    onDayPlanClick();
   };
   window.__openPhotoForSite = (siteId) => switchToPanel('panel-photos');
   window.__trackGoogleSearch = (label, url) => addGoogleSearchToHistory(decodeURIComponent(label), url);
-  window.__exportDayPlan = (format) => showToast('Export programme — fonctionnalité complète disponible dans les prochaines versions.', 'info');
+  window.__exportDayPlan = (format) => {
+    if (!_currentDayPlan) { showToast('Aucun programme à exporter.', 'warning'); return; }
+    if (format === 'text' && navigator.clipboard) {
+      navigator.clipboard.writeText(exportPlanAsText(_currentDayPlan))
+        .then(() => showToast('Programme copié.', 'success'))
+        .catch(() => showToast('Copie non disponible.', 'warning'));
+    }
+  };
+
+  // Restaurer programme sauvegardé
+  const savedPlan = loadSavedDayPlan();
+  if (savedPlan) {
+    _currentDayPlan = savedPlan;
+    document.getElementById('btn-day-plan')?.classList.add('has-saved-plan');
+    showToast(`Programme sauvegardé chargé (${savedPlan.sites.length} étapes).`, 'info', 4000);
+  }
 
   // Fermeture modales
   document.getElementById('modal-close-btn')?.addEventListener('click', closeSiteDetail);
-  document.getElementById('day-plan-close-btn')?.addEventListener('click', () => {
-    document.getElementById('day-plan-modal')?.classList.add('hidden');
-  });
   document.getElementById('journal-modal-close')?.addEventListener('click', () => {
     document.getElementById('journal-modal')?.classList.add('hidden');
   });
@@ -781,7 +807,83 @@ function showRunningScreen() {
 }
 
 /* =========================================================
-   BLOC 10b — VISIONNEUSE PHOTO PLEIN ÉCRAN
+   BLOC 10b — PROGRAMME JOURNÉE
+   ========================================================= */
+function onDayPlanClick() {
+  const modal   = document.getElementById('day-plan-modal');
+  const content = document.getElementById('day-plan-content');
+  if (!modal || !content) return;
+
+  if (!_currentDayPlan) {
+    const km = Math.min(_maxDistanceKm > 0 ? _maxDistanceKm : 80, 80);
+    _currentDayPlan = generateDayPlan(_sites, _vehicleProfile, {
+      maxKm: km, minStops: 3, maxStops: 5,
+      avoidTolls: _vehicleProfile?.avoid_tolls ?? true
+    });
+    if (!_currentDayPlan) {
+      showToast('Pas assez de sites avec GPS dans ce rayon. Augmentez la distance.', 'warning');
+      return;
+    }
+  }
+
+  content.innerHTML = renderDayPlan(_currentDayPlan);
+  modal.classList.remove('hidden');
+  _bindDayPlanActions();
+}
+
+function _bindDayPlanActions() {
+  const plan = _currentDayPlan;
+
+  document.getElementById('btn-dp-map')?.addEventListener('click', () => {
+    document.getElementById('day-plan-modal')?.classList.add('hidden');
+    switchToPanel('panel-map');
+    setTimeout(() => { invalidateMapSize(); renderDayPlanRoute(plan.sites); }, 200);
+    showToast('Itinéraire affiché sur la carte.', 'success');
+  });
+
+  document.getElementById('btn-dp-save')?.addEventListener('click', () => {
+    saveDayPlan(plan);
+    document.getElementById('btn-day-plan')?.classList.add('has-saved-plan');
+    showToast('Programme sauvegardé — rechargé au prochain démarrage.', 'success');
+  });
+
+  document.getElementById('btn-dp-regen')?.addEventListener('click', () => {
+    _currentDayPlan = null;
+    clearDayPlanRoute();
+    const km = Math.min(_maxDistanceKm > 0 ? _maxDistanceKm : 80, 80);
+    _currentDayPlan = generateDayPlan(_sites, _vehicleProfile, {
+      maxKm: km, minStops: 3, maxStops: 5,
+      avoidTolls: _vehicleProfile?.avoid_tolls ?? true
+    });
+    const content = document.getElementById('day-plan-content');
+    if (content && _currentDayPlan) {
+      content.innerHTML = renderDayPlan(_currentDayPlan);
+      _bindDayPlanActions();
+    }
+  });
+
+  document.getElementById('btn-dp-copy')?.addEventListener('click', () => {
+    const text = exportPlanAsText(plan);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast('Programme copié dans le presse-papier.', 'success'))
+        .catch(() => showToast('Copie non disponible.', 'warning'));
+    }
+  });
+
+  document.getElementById('btn-dp-delete')?.addEventListener('click', () => {
+    if (!confirm('Supprimer le programme sauvegardé ?')) return;
+    deleteSavedDayPlan();
+    _currentDayPlan = null;
+    clearDayPlanRoute();
+    document.getElementById('btn-day-plan')?.classList.remove('has-saved-plan');
+    document.getElementById('day-plan-modal')?.classList.add('hidden');
+    showToast('Programme supprimé.', 'info');
+  });
+}
+
+/* =========================================================
+   BLOC 10c — VISIONNEUSE PHOTO PLEIN ÉCRAN
    ========================================================= */
 function openPhotoFullscreen(photo) {
   const src = photo.thumbnail;
