@@ -25,8 +25,17 @@ import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
 import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 import { initAuthScreen, logout, getCurrentUser } from './auth.js';
-import { fetchWeather } from './weather.js';
-import { renderCarnet, saveJournalToSession, calcCarnetStats } from './carnet.js';
+// Imports lazy — chargés à la demande pour ne pas bloquer le démarrage
+let _fetchWeather = null;
+let _renderCarnet = null;
+let _saveJournalToSession = null;
+async function _loadWeather() {
+  if (!_fetchWeather) { try { const m = await import('./weather.js'); _fetchWeather = m.fetchWeather; } catch(e) {} }
+  return _fetchWeather;
+}
+async function _loadCarnet() {
+  if (!_renderCarnet) { try { const m = await import('./carnet.js'); _renderCarnet = m.renderCarnet; _saveJournalToSession = m.saveJournalToSession; } catch(e) {} }
+}
 
 /* =========================================================
    BLOC 02 — ÉTAT APPLICATIF LOCAL
@@ -142,6 +151,18 @@ async function startApp() {
 
   // Liens vérification énergie
   renderEnergyVerificationLinks();
+
+  // Reset SW / cache
+  document.getElementById('btn-reset-sw')?.addEventListener('click', async () => {
+    if (!confirm('Vider le cache et recharger ? Vos données locales sont conservées.')) return;
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const reg of regs) await reg.unregister();
+    }
+    const keys = await caches.keys();
+    for (const k of keys) await caches.delete(k);
+    location.reload(true);
+  });
 
   // Exposition globale pour popups/modales
   window.__openSiteDetail = (siteId) => {
@@ -346,7 +367,8 @@ function onPanelChange(panelId) {
   if (panelId === 'panel-photos') updatePhotoPanel();
   if (panelId === 'panel-carnet') {
     const container = document.getElementById('carnet-container');
-    if (container) renderCarnet(container, { onShowOnMap: onCarnetShowOnMap });
+    await _loadCarnet();
+    if (container && _renderCarnet) _renderCarnet(container, { onShowOnMap: onCarnetShowOnMap });
   }
 }
 
@@ -771,8 +793,9 @@ function initTrackingUI() {
       _startTime = null;
       const finishedSid = await stopTracking();
       // Sauvegarder les calories finales dans la session
-      if (finishedSid && stat.calories > 0) {
-        await saveJournalToSession(finishedSid, { final_calories: stat.calories });
+      await _loadCarnet();
+      if (finishedSid && stat.calories > 0 && _saveJournalToSession) {
+        await _saveJournalToSession(finishedSid, { final_calories: stat.calories });
       }
       setActiveUI(false);
       clearTrack();
@@ -889,9 +912,12 @@ async function _fetchWeatherForSession(sessionId) {
   try {
     const origin = getStoredOrigin();
     if (!origin || !origin.lat) return;
+    const fetchWeather = await _loadWeather();
+    if (!fetchWeather) return;
     const weather = await fetchWeather(origin.lat, origin.lon);
     if (weather) {
-      await saveJournalToSession(sessionId, {
+      await _loadCarnet();
+      if (_saveJournalToSession) await _saveJournalToSession(sessionId, {
         weather_emoji: weather.emoji,
         weather_temp: weather.temp
       });
@@ -979,13 +1005,13 @@ function showRunSummaryWithJournal(stats, activityMode, tempC, weightKg, session
     btn.addEventListener('click', async () => {
       content.querySelectorAll('.post-mood-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (sessionId) await saveJournalToSession(sessionId, { journal_mood: btn.dataset.mood });
+      if (sessionId && _saveJournalToSession) await _saveJournalToSession(sessionId, { journal_mood: btn.dataset.mood });
     });
   });
 
   document.getElementById('btn-save-post-journal')?.addEventListener('click', async () => {
     const notes = document.getElementById('post-journal-notes')?.value || '';
-    if (sessionId && notes) await saveJournalToSession(sessionId, { journal_notes: notes });
+    if (sessionId && notes && _saveJournalToSession) await _saveJournalToSession(sessionId, { journal_notes: notes });
     const status = document.getElementById('post-journal-status');
     if (status) status.textContent = '✅ Journal enregistré dans votre carnet !';
     showToast('Journal sauvegardé dans votre carnet.', 'success');

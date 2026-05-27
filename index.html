@@ -367,6 +367,13 @@
         <input type="file" id="import-data-input" accept=".json" style="display:none" />
       </div>
 
+      <!-- Reset SW / Cache -->
+      <div class="settings-section">
+        <h3>🔄 Réinitialiser l'application</h3>
+        <p class="info-disclaimer">Si l'app est bloquée ou affiche une page blanche, vide le cache du Service Worker.</p>
+        <button id="btn-reset-sw" class="btn-secondary" style="border-color:#e74c3c;color:#e74c3c">🗑️ Vider le cache et recharger</button>
+      </div>
+
     </div>
   </section>
 
@@ -432,7 +439,7 @@ window.addEventListener('unhandledrejection', function(e) {
 <div id="critical-error" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#e74c3c;color:#fff;padding:12px;font-size:13px;z-index:99999;word-break:break-all;white-space:pre-wrap"></div>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=4"></script>
+<script type="module" src="js/app.js?v=5"></script>
 
 </body>
 </html>
