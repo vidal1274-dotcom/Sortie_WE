@@ -385,16 +385,44 @@
 </main>
 
 <!-- ═══════════════════════════════════════════════
-     RUNNING SCREEN (style Strava / Adidas)
+     RUNNING SCREEN (style Adidas Running)
 ═══════════════════════════════════════════════ -->
 <div id="running-screen" class="hidden">
+
+  <!-- Compte à rebours -->
+  <div id="rs-countdown" class="rs-countdown hidden">
+    <div id="rs-count-num" class="rs-count-num">3</div>
+    <div class="rs-count-sub">Préparez-vous !</div>
+  </div>
+
+  <!-- Bannière auto-pause -->
+  <div id="rs-autopause-banner" class="rs-autopause-banner hidden">⏸&nbsp;AUTO-PAUSE</div>
+
+  <!-- Écran verrouillé -->
+  <div id="rs-lock-overlay" class="rs-lock-overlay hidden">
+    <div class="rs-lock-icon">🔒</div>
+    <div class="rs-lock-hint">Maintenir 2 s pour déverrouiller</div>
+    <button id="btn-rs-unlock" class="rs-unlock-btn">Déverrouiller</button>
+  </div>
+
+  <!-- Handle + header -->
   <div class="rs-handle"></div>
   <div class="rs-header">
     <button id="btn-rs-back" class="rs-icon-btn">✕</button>
     <div class="rs-title">🏃 COURSE</div>
-    <div class="rs-icon-btn" style="visibility:hidden">·</div>
+    <button id="btn-rs-lock" class="rs-icon-btn" title="Verrouiller">🔒</button>
   </div>
+
+  <!-- GPS + zone -->
+  <div class="rs-status-row">
+    <span id="rs-gps-ind">⚫ GPS…</span>
+    <span id="rs-zone-badge" class="rs-zone-badge hidden">—</span>
+  </div>
+
+  <!-- Chrono -->
   <div class="rs-timer" id="rs-timer">0:00</div>
+
+  <!-- Métriques principales -->
   <div class="rs-main">
     <div class="rs-metric-block">
       <div class="rs-big-val" id="rs-distance">0.00</div>
@@ -406,13 +434,31 @@
       <div class="rs-big-lbl">ALLURE (min/km)</div>
     </div>
   </div>
+
+  <!-- Métriques secondaires -->
   <div class="rs-secondary">
     <div class="rs-sm"><div class="rs-sm-val" id="rs-speed">0.0</div><div class="rs-sm-lbl">km/h</div></div>
     <div class="rs-sm"><div class="rs-sm-val" id="rs-elev">+0</div><div class="rs-sm-lbl">m D+</div></div>
     <div class="rs-sm"><div class="rs-sm-val" id="rs-calories">0</div><div class="rs-sm-lbl">kcal</div></div>
+    <div class="rs-sm"><div class="rs-sm-val" id="rs-last-split">—</div><div class="rs-sm-lbl">km préc.</div></div>
   </div>
+
+  <!-- Eau -->
   <div class="rs-water" id="rs-water">💧 —</div>
-  <button id="btn-rs-toggle" class="rs-btn-start">▶&nbsp;&nbsp;DÉMARRER</button>
+
+  <!-- Contrôles -->
+  <div class="rs-controls">
+    <button id="btn-rs-start"  class="rs-btn-start">▶&nbsp;&nbsp;DÉMARRER</button>
+    <div    id="rs-run-ctrl"   class="rs-run-ctrl hidden">
+      <button id="btn-rs-stop"  class="rs-btn-round rs-btn-round-stop">⏹</button>
+      <button id="btn-rs-pause" class="rs-btn-round rs-btn-round-pause">⏸</button>
+    </div>
+    <div    id="rs-pause-ctrl" class="rs-run-ctrl hidden">
+      <button id="btn-rs-stop2"   class="rs-btn-round rs-btn-round-stop">⏹</button>
+      <button id="btn-rs-resume"  class="rs-btn-round rs-btn-round-resume">▶</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══════════════════════════════════════════════
@@ -481,7 +527,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 </script>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=18"></script>
+<script type="module" src="js/app.js?v=19"></script>
 
 </body>
 </html>
