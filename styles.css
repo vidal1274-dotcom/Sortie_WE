@@ -383,6 +383,9 @@ html, body {
 /* =========================================================
    BLOC 06 — CARTE
    ========================================================= */
+#filters-bar.hidden-for-map,
+#location-bar.hidden-for-map { display: none !important; }
+
 #panel-map { position: relative; }
 #map-container { flex: 1; position: relative; min-height: 0; }
 #map {
@@ -485,6 +488,7 @@ html, body {
   align-items: flex-start;
   box-shadow: var(--shadow-card);
   min-height: 72px;
+  flex-shrink: 0;
 }
 .site-card::before {
   content: '';
@@ -2532,6 +2536,59 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
   border-color: #27ae60;
   color: #27ae60;
 }
+
+/* =========================================================
+   BLOC — ASCENSEUR
+   ========================================================= */
+#scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: var(--color-accent);
+  z-index: 9999;
+  transition: width 0.1s linear;
+  border-radius: 0 2px 2px 0;
+}
+
+#btn-scroll-top {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(233,69,96,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px) scale(0.9);
+  transition: opacity 0.22s, transform 0.22s;
+}
+#btn-scroll-top.visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0) scale(1);
+}
+#btn-scroll-top:hover {
+  background: #c73652;
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* Scrollbar personnalisée pour la liste de sites */
+#sites-list::-webkit-scrollbar        { width: 4px; }
+#sites-list::-webkit-scrollbar-track  { background: transparent; }
+#sites-list::-webkit-scrollbar-thumb  { background: var(--color-accent); border-radius: 2px; opacity: 0.6; }
 
 /* =========================================================
    BLOC — PROGRAMME JOURNÉE

@@ -11,7 +11,7 @@ import { loadVehicleProfile } from './vehicle-profile.js';
 import { initGlobalSearch, interpretSearchQuery } from './global-search.js';
 import { openSiteDetail, closeSiteDetail, openGpsEditDialog } from './site-detail.js';
 import { generateSurprise, renderSurpriseCard } from './surprise-engine.js';
-import { initNavTabs, renderSitesList, renderEconomyPanel, showLoading, switchToPanel } from './ui.js';
+import { initNavTabs, renderSitesList, renderEconomyPanel, showLoading, switchToPanel } from './ui.js?v=23';
 import { initNetworkManager, getNetworkStatus } from './network-manager.js';
 import { initNetworkUI } from './network-ui.js';
 import { loadAllPhotos, importPhotos } from './photos.js';
@@ -119,6 +119,7 @@ async function startApp() {
   // Enregistrement de parcours GPS
   initTrackingUI();
   initRunningScreen();
+  initScrollElevator();
 
   // Bascule couche carte
   document.getElementById('btn-map-layer')?.addEventListener('click', () => {
@@ -382,8 +383,15 @@ function initLocationBar() {
    BLOC 06 — PANNEAU CHANGEMENT
    ========================================================= */
 async function onPanelChange(panelId) {
-  if (panelId === 'panel-map') {
-    setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 50);
+  // Masquer filtres/rayon sur la carte pour un affichage plein écran
+  const filtersBar  = document.getElementById('filters-bar');
+  const locationBar = document.getElementById('location-bar');
+  const isMap = panelId === 'panel-map';
+  if (filtersBar)  filtersBar.classList.toggle('hidden-for-map', isMap);
+  if (locationBar) locationBar.classList.toggle('hidden-for-map', isMap);
+
+  if (isMap) {
+    setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 80);
   }
   if (panelId === 'panel-photos') updatePhotoPanel();
   if (panelId === 'panel-carnet') {
@@ -451,7 +459,29 @@ function initSettingsUI() {
 }
 
 /* =========================================================
-   BLOC 09 — PHOTOS UI
+   BLOC 09 — ASCENSEUR (scroll to top + barre progression)
+   ========================================================= */
+function initScrollElevator() {
+  const list     = document.getElementById('sites-list');
+  const btnTop   = document.getElementById('btn-scroll-top');
+  const progress = document.getElementById('scroll-progress-bar');
+  if (!list) return;
+
+  list.addEventListener('scroll', () => {
+    const { scrollTop, scrollHeight, clientHeight } = list;
+    const pct = scrollHeight > clientHeight
+      ? (scrollTop / (scrollHeight - clientHeight)) * 100 : 0;
+    if (progress) progress.style.width = pct + '%';
+    if (btnTop) btnTop.classList.toggle('visible', scrollTop > 220);
+  }, { passive: true });
+
+  btnTop?.addEventListener('click', () => {
+    list.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/* =========================================================
+   BLOC 10 — PHOTOS UI
    ========================================================= */
 function initPhotoUI() {
   const photoInput = document.getElementById('photo-file-input');
