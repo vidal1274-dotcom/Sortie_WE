@@ -37,7 +37,7 @@
           document.getElementById('cpt').textContent = n;
           if (n <= 0) {
             clearInterval(iv);
-            window.location.replace('./');
+            window.location.replace('./?v=' + Date.now());
           }
         }, 1000);
       }
