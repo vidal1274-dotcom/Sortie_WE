@@ -137,51 +137,10 @@ export function getUserList() {
  * @param {(user: { username: string, key: string }) => void} onLogin
  */
 export function initAuthScreen(onLogin) {
+  // Démarrage direct sans écran de connexion
   const screen = document.getElementById('auth-screen');
-  if (!screen) return;
-
-  if (isLoggedIn()) {
-    screen.classList.add('hidden');
-    onLogin(getCurrentUser());
-    return;
-  }
-
-  // Migration : si aucun compte trekko mais un ancien compte sorties
-  const oldRaw = localStorage.getItem('sorties_users');
-  if (oldRaw) {
-    try {
-      const oldUsers = JSON.parse(oldRaw);
-      const first = Object.values(oldUsers)[0];
-      if (first) {
-        const key = first.username.trim().toLowerCase();
-        const users = _loadUsers();
-        if (!users[key]) {
-          users[key] = { username: first.username, hash: first.hash, createdAt: first.createdAt || new Date().toISOString() };
-          _saveUsers(users);
-        }
-        _setSession(first.username, key);
-        screen.classList.add('hidden');
-        onLogin(getCurrentUser());
-        return;
-      }
-    } catch(e) { /* ignore */ }
-  }
-
-  // Premier lancement : auto-créer un compte "voyageur" et se connecter directement
-  const users = getUserList();
-  if (users.length === 0) {
-    const autoUser = { username: 'Voyageur', hash: 'auto', createdAt: new Date().toISOString() };
-    const allUsers = {};
-    allUsers['voyageur'] = autoUser;
-    _saveUsers(allUsers);
-    _setSession('Voyageur', 'voyageur');
-    screen.classList.add('hidden');
-    onLogin(getCurrentUser());
-    return;
-  }
-
-  screen.classList.remove('hidden');
-  _renderAuthForm(screen, onLogin, false);
+  if (screen) screen.classList.add('hidden');
+  onLogin({ username: 'Voyageur', key: 'voyageur' });
 }
 
 /* ── Rendu interne ───────────────────────────────────────────────────────── */

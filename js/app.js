@@ -52,9 +52,8 @@ let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
    BLOC 03 — INITIALISATION PRINCIPALE
    ========================================================= */
 async function init() {
-  // Cacher l'écran de boot dès que JS démarre
-  const bootEl = document.getElementById('app-boot');
-  if (bootEl) bootEl.style.display = 'none';
+  // Supprimer le boot overlay
+  try { document.getElementById('app-boot')?.remove(); } catch(e) {}
 
   // Auth en premier — tout le reste attend la connexion
   initAuthScreen(async (user) => {
@@ -125,8 +124,10 @@ async function startApp() {
   // Barre localisation + slider distance
   initLocationBar();
 
-  // Écran d'accueil
+  // Écran d'accueil (bouton 🏠 uniquement — pas d'affichage automatique)
   initWelcomeScreen(onWelcomeModeSelect);
+  switchToPanel('panel-map');
+  setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 200);
 
   // Enregistrement de parcours GPS
   initTrackingUI();
