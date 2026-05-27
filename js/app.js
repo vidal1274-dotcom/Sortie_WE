@@ -52,10 +52,7 @@ let _originCoords  = null; // {lat, lon} — null = UCHAUD_COORDS
    BLOC 03 — INITIALISATION PRINCIPALE
    ========================================================= */
 async function init() {
-  const _dbg = document.getElementById('dbg');
-  if (_dbg) _dbg.textContent = 'HTML✓ CSS✓ JS✓ — init()…';
   initAuthScreen(async (user) => {
-  if (_dbg) _dbg.textContent = 'auth OK — startApp()…';
     const logoutBtn = document.getElementById('btn-logout');
     if (logoutBtn) {
       logoutBtn.classList.remove('hidden');
@@ -71,40 +68,18 @@ async function init() {
 }
 
 async function startApp() {
-  const _d = document.getElementById('dbg');
-  const _upd = (t) => { if (_d) _d.textContent = t; };
-
-  _upd('1/6 network…');
   initNetworkManager();
   initNetworkUI();
-
-  _upd('2/6 map init…');
   initMap('map');
-  // Force la couleur orange directement via JS + crée un bloc visible
-  const _mapEl = document.getElementById('map');
-  if (_mapEl) {
-    _mapEl.style.background = 'orange';
-    const _probe = document.createElement('div');
-    _probe.style.cssText = 'position:fixed;top:50%;left:10px;right:10px;transform:translateY(-50%);background:orange;color:#000;font-size:22px;font-weight:bold;text-align:center;padding:20px;border-radius:12px;z-index:9999990';
-    _probe.id = 'map-probe';
-    _probe.textContent = '🗺️ CARTE CHARGEE — Appuyez ici !';
-    document.body.appendChild(_probe);
-    _probe.addEventListener('click', () => _probe.remove());
-  }
-  setTimeout(() => {
-    const m = document.getElementById('map');
-    _upd('map: ' + (m ? m.clientWidth+'x'+m.clientHeight : 'introuvable') + ' bg:' + (m ? getComputedStyle(m).backgroundColor : '?'));
-  }, 600);
-  setTimeout(() => invalidateMapSize(), 300);
-  setTimeout(() => invalidateMapSize(), 800);
+  setTimeout(() => invalidateMapSize(), 200);
+  setTimeout(() => invalidateMapSize(), 600);
+  setTimeout(() => invalidateMapSize(), 1500);
 
-  _upd('3/6 nav+vehicle…');
   initNavTabs(onPanelChange);
   _vehicleProfile = loadVehicleProfile();
   applyVehicleToUI(_vehicleProfile);
   initVehicleSettingsUI();
 
-  _upd('4/6 loadSites…');
   showLoading('sites-list', 'Chargement des sites…');
   try {
     _sites = await loadSites();
@@ -115,11 +90,9 @@ async function startApp() {
     const stats = getDataStats(_sites);
     if (stats.withoutGps > 0) showToast(`${stats.withoutGps} site(s) sans coordonnées GPS — badge affiché.`, 'warning', 5000);
   } catch(e) {
-    _upd('ERREUR sites: ' + e.message);
     showToast('Erreur chargement données. Mode hors ligne activé.', 'error');
   }
 
-  _upd('5/6 photos+search…');
   initPhotoUI();
   setupAutoSync(getNetworkStatus);
 
@@ -138,11 +111,9 @@ async function startApp() {
   // Barre localisation + slider distance
   initLocationBar();
 
-  _upd('6/6 welcome+panel…');
   initWelcomeScreen(onWelcomeModeSelect);
   switchToPanel('panel-map');
-  setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 200);
-  setTimeout(() => { _upd('✅ APP OK — ' + (_sites.length||0) + ' sites'); }, 500);
+  setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 300);
 
   // Enregistrement de parcours GPS
   initTrackingUI();
