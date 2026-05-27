@@ -1,7 +1,7 @@
 /* =========================================================
    BLOC 01 — ÉCRAN D'ACCUEIL (splash)
    ========================================================= */
-const LS_KEY_LAST_MODE = 'sorties_last_mode';
+const LS_KEY_LAST_MODE = 'trekko_last_mode';
 
 const MODES = [
   {

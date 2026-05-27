@@ -1,7 +1,7 @@
 {
-  "name": "Mes Sorties Nîmes",
-  "short_name": "SortiesNîmes",
-  "description": "Préparez vos sorties week-end autour de Nîmes : carte, budget, coût énergie, bons plans et photos.",
+  "name": "TREKKO",
+  "short_name": "TREKKO",
+  "description": "TREKKO — Explorez, tracez, vivez vos aventures.",,
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

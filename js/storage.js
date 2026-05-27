@@ -1,7 +1,7 @@
 /* =========================================================
    BLOC 01 — INDEXEDDB SETUP
    ========================================================= */
-const DB_NAME = 'sorties-nimes-db';
+const DB_NAME = 'trekko-db';
 const DB_VERSION = 3;
 let _db = null;
 
@@ -119,19 +119,19 @@ export async function dbGetByIndex(storeName, indexName, value) {
    BLOC 03 — LOCALSTORAGE (paramètres légers)
    ========================================================= */
 export function lsSet(key, value) {
-  try { localStorage.setItem(`sorties_${key}`, JSON.stringify(value)); return true; }
+  try { localStorage.setItem(`trekko_${key}`, JSON.stringify(value)); return true; }
   catch(e) { console.warn('[storage] localStorage write failed', e); return false; }
 }
 
 export function lsGet(key, defaultVal = null) {
   try {
-    const raw = localStorage.getItem(`sorties_${key}`);
+    const raw = localStorage.getItem(`trekko_${key}`);
     return raw != null ? JSON.parse(raw) : defaultVal;
   } catch(e) { return defaultVal; }
 }
 
 export function lsDel(key) {
-  try { localStorage.removeItem(`sorties_${key}`); } catch(e) {}
+  try { localStorage.removeItem(`trekko_${key}`); } catch(e) {}
 }
 
 /* =========================================================

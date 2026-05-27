@@ -1,8 +1,8 @@
 /* auth.js — Authentification locale (pas de serveur, Web Crypto SHA-256) */
 
-const LS_USERS   = 'sorties_users';
-const SS_CURRENT = 'sorties_current_user';
-const SALT       = 'sorties_nimes_2026';
+const LS_USERS   = 'trekko_users';
+const SS_CURRENT = 'trekko_current_user';
+const SALT       = 'trekko_nimes_2026';
 
 /* ── Hachage SHA-256 ─────────────────────────────────────────────────────── */
 async function hashPassword(password) {
@@ -164,7 +164,7 @@ function _renderAuthForm(container, onLogin, isRegister) {
     <div class="auth-bg"></div>
     <div class="auth-card">
       <div class="auth-logo">🗺️</div>
-      <div class="auth-title">Mes Sorties Nîmes</div>
+      <div class="auth-title">TREKKO</div>
       <div class="auth-subtitle">${isRegister
         ? 'Créez votre compte pour commencer'
         : 'Bon retour ! Connectez-vous pour continuer'}</div>

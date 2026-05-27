@@ -1872,7 +1872,7 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
   height: 3px;
 }
 .accent-km::before      { background: linear-gradient(90deg, #e94560, #f5a623); }
-.accent-sorties::before { background: linear-gradient(90deg, #3498db, #9b59b6); }
+.accent-aventures::before { background: linear-gradient(90deg, #3498db, #9b59b6); }
 .accent-time::before    { background: linear-gradient(90deg, #2ecc71, #1abc9c); }
 .accent-cal::before     { background: linear-gradient(90deg, #f39c12, #e74c3c); }
 .csc-val  { font-size: 24px; font-weight: 800; color: var(--color-text); line-height: 1.1; }

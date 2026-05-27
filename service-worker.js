@@ -3,7 +3,7 @@
    Supprime tous les anciens caches (chemins absolus incorrects
    pour GitHub Pages /Sortie_WE/) et passe les requêtes au réseau.
    ========================================================= */
-const CACHE_NAME = 'sorties-nimes-v8';
+const CACHE_NAME = 'trekko-v8';
 
 // Installe immédiatement sans attendre
 self.addEventListener('install', () => {

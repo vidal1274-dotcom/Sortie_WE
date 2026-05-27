@@ -57,8 +57,8 @@ export async function renderCarnet(container, { onShowOnMap } = {}) {
       <!-- En-tête style Polarsteps -->
       <div class="carnet-hero">
         <div class="carnet-hero-icon">📔</div>
-        <h2>Mon Carnet de Sorties</h2>
-        <p>Journal de voyage personnel · Nîmes & alentours</p>
+        <h2>Mon Carnet TREKKO</h2>
+        <p>Journal de voyage personnel · Vos aventures</p>
       </div>
 
       <!-- Dashboard stats agrégées -->
@@ -68,9 +68,9 @@ export async function renderCarnet(container, { onShowOnMap } = {}) {
           <div class="csc-unit">km</div>
           <div class="csc-lbl">Parcourus</div>
         </div>
-        <div class="carnet-stat-card accent-sorties">
+        <div class="carnet-stat-card accent-aventures">
           <div class="csc-val">${stats.count}</div>
-          <div class="csc-unit">sorties</div>
+          <div class="csc-unit">aventures</div>
           <div class="csc-lbl">Enregistrées</div>
         </div>
         <div class="carnet-stat-card accent-time">
@@ -92,7 +92,7 @@ export async function renderCarnet(container, { onShowOnMap } = {}) {
         <span class="best-km">${bestSession.total_distance_km} km</span>
       </div>` : ''}
 
-      <!-- Timeline des sorties -->
+      <!-- Timeline des aventures -->
       <div class="carnet-section-title">📍 Mes sorties</div>
       <div class="carnet-timeline">
         ${sessions.length === 0

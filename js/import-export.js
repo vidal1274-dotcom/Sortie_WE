@@ -21,7 +21,7 @@ export async function exportAllData() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `sorties-nimes-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `trekko-export-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('Données exportées', 'success');

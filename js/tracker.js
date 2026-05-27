@@ -62,7 +62,7 @@ export async function startTracking(label = 'Parcours', isPublic = false, activi
     splits: []
   };
   await dbPut(STORES.TRACK_SESSIONS, session);
-  localStorage.setItem('sorties_active_track_session', _sessionId);
+  localStorage.setItem('trekko_active_track_session', _sessionId);
 
   await recordPoint();
   _intervalId = setInterval(recordPoint, cfg.interval_ms);
@@ -77,7 +77,7 @@ export async function stopTracking() {
   clearInterval(_intervalId);
   _intervalId = null;
   document.removeEventListener('visibilitychange', _onVisibilityChange);
-  localStorage.removeItem('sorties_active_track_session');
+  localStorage.removeItem('trekko_active_track_session');
 
   const sessions = await dbGetAll(STORES.TRACK_SESSIONS);
   const session = sessions.find(s => s.id === _sessionId);
@@ -246,7 +246,7 @@ export function exportAsGPX(points, sessionLabel = 'Parcours') {
     }).join('\n');
 
   const gpx = `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="MesSortiesNimes" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="TREKKO" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata><name>${sessionLabel}</name><time>${new Date().toISOString()}</time></metadata>
   <trk>
     <name>${sessionLabel}</name>

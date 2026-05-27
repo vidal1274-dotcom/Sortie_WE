@@ -3,7 +3,7 @@
    ========================================================= */
 // Fichier de configuration global — pas de clés API en dur
 export const APP_VERSION = '1.0.0';
-export const APP_NAME = 'Mes Sorties Nîmes';
+export const APP_NAME = 'TREKKO';
 
 export const MAP_CENTER = [43.8367, 4.3601]; // Uchaud / Nîmes
 export const MAP_ZOOM_DEFAULT = 10;
@@ -13,7 +13,7 @@ export const MAP_ZOOM_MAX = 18;
 export const UCHAUD_COORDS = [43.7437, 4.4096]; // Point de départ (Uchaud)
 
 export const SITES_JSON_URL = 'sites.json';
-export const CACHE_VERSION = 'sorties-nimes-v1';
+export const CACHE_VERSION = 'trekko-v1';
 
 /* =========================================================
    BLOC 02 — PROFIL VÉHICULE PAR DÉFAUT

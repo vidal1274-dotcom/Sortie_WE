@@ -66,7 +66,7 @@ async function init() {
 }
 
 async function startApp() {
-  console.log('[app] Initialisation Mes Sorties Nîmes');
+  console.log('[app] Initialisation TREKKO');
 
   // Réseau
   initNetworkManager();
@@ -625,7 +625,7 @@ function initTrackingUI() {
   const tempDisplay = document.getElementById('temp-display');
   const weightInput = document.getElementById('weight-input');
   const btnVoice    = document.getElementById('btn-voice-coach');
-  let _weightKg     = parseInt(localStorage.getItem('sorties_weight_kg') || '70', 10);
+  let _weightKg     = parseInt(localStorage.getItem('trekko_weight_kg') || '70', 10);
   let _voiceEnabled = false;
   let _lastVoiceKm  = 0;
   let _lastWaterReminderMin = 0;
@@ -660,7 +660,7 @@ function initTrackingUI() {
   // Poids
   weightInput?.addEventListener('change', () => {
     _weightKg = parseInt(weightInput.value, 10) || 70;
-    localStorage.setItem('sorties_weight_kg', String(_weightKg));
+    localStorage.setItem('trekko_weight_kg', String(_weightKg));
   });
 
   // Coaching vocal
