@@ -17,12 +17,24 @@
   <div class="ok" id="js-ok" style="display:none">✅ JavaScript OK</div>
   <div class="info" id="info">Chargement JS...</div>
   <script>
+    /* Supprime tout service worker et tout cache avant de s'afficher */
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { caches.delete(k); });
+      });
+    }
+
     document.getElementById('js-ok').style.display='block';
     document.getElementById('info').textContent =
-      'Navigateur : ' + navigator.userAgent.split(' ').slice(-2).join(' ') +
-      '\nURL : ' + location.href +
-      '\nSW : ' + ('serviceWorker' in navigator ? 'oui' : 'non') +
-      '\nModules : ' + (typeof Promise !== 'undefined' ? 'oui' : 'non');
+      'Nav : ' + navigator.userAgent.split(' ').slice(-2).join(' ') + '\n' +
+      'URL : ' + location.href + '\n' +
+      'SW  : ' + ('serviceWorker' in navigator ? 'oui' : 'non') + '\n' +
+      'OK  : tout fonctionne';
   </script>
 </body>
 </html>
