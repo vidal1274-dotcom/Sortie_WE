@@ -5,6 +5,7 @@ import { formatCurrency, haversineDistance } from './utils.js';
 import { estimateTripEnergyCost } from './trip-energy-estimator.js';
 import { lsGet, lsSet, lsDel } from './storage.js';
 import { UCHAUD_COORDS } from './config.js';
+import { filterUnvisited } from './visited.js';
 
 const LS_KEY          = 'day_plan';
 const VISIT_MIN       = 90;   // durée visite par défaut
@@ -23,8 +24,8 @@ export function generateDayPlan(sites, vehicleProfile, options = {}) {
     avoidTolls = vehicleProfile?.avoid_tolls ?? true
   } = options;
 
-  // 1. Candidats : GPS requis + dans le rayon
-  let candidates = sites.filter(s =>
+  // 1. Candidats : GPS requis + dans le rayon + non visités
+  let candidates = filterUnvisited(sites).filter(s =>
     s.has_gps && s.lat && s.lon &&
     (s.distance_km == null || s.distance_km <= maxKm)
   );
@@ -75,7 +76,7 @@ export function generateDayPlan(sites, vehicleProfile, options = {}) {
       time: _fmt(cur), icon: '📍',
       label: `Arrivée : ${site.destination}`,
       type: 'arrival', site,
-      travelKm: Math.round(segKm), travelMin
+      travelKm: Math.round(segKm), travelMin: travMin
     });
 
     cur += 15; // parking

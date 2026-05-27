@@ -2,27 +2,32 @@
    BLOC 01 — IMPORTS
    ========================================================= */
 import { enrichSiteInfo, buildWhatToDoList, estimateVisitDuration } from './site-insights.js';
-import { renderInsightsSection, buildInsightLinks } from './external-insights.js';
-import { buildBudget, renderBudget } from './budget-estimator.js';
 import { buildSiteBadges } from './markers.js';
-import { buildWazeLink, buildGoogleMapsLink, buildAppleMapsLink, formatDistance } from './utils.js';
-import { renderTripEnergyCost, compareAllScenarios, buildEnergyVerificationLinks } from './trip-energy-estimator.js';
-import { renderConfidenceBadge } from './source-confidence.js';
+import { buildWazeLink, buildGoogleMapsLink, buildAppleMapsLink } from './utils.js';
+import { toggleVisited, isVisited } from './visited.js';
 
 /* =========================================================
-   BLOC 02 — OUVERTURE MODALE
+   BLOC 02 — OUVERTURE / FERMETURE
    ========================================================= */
 export function openSiteDetail(site, vehicleProfile) {
-  const modal = document.getElementById('site-detail-modal');
+  const modal   = document.getElementById('site-detail-modal');
   const content = document.getElementById('site-detail-content');
   if (!modal || !content) return;
 
-  const enriched = enrichSiteInfo(site);
-  content.innerHTML = buildSiteDetailHtml(enriched, vehicleProfile);
+  content.innerHTML = buildSiteDetailHtml(enrichSiteInfo(site));
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Fermeture
+  // Bouton "Déjà visité"
+  const visitBtn = content.querySelector('#btn-mark-visited');
+  if (visitBtn) {
+    visitBtn.addEventListener('click', () => {
+      const now = toggleVisited(site.id);
+      visitBtn.textContent = now ? '✅ Déjà visité' : '👁️ Marquer comme vu';
+      visitBtn.classList.toggle('visited-active', now);
+    });
+  }
+
   document.getElementById('modal-close-btn')?.addEventListener('click', closeSiteDetail);
   modal.querySelector('.modal-overlay')?.addEventListener('click', closeSiteDetail);
 }
@@ -34,111 +39,124 @@ export function closeSiteDetail() {
 }
 
 /* =========================================================
-   BLOC 03 — HTML COMPLET FICHE SITE
+   BLOC 03 — HTML FICHE SITE (design refondu)
    ========================================================= */
-function buildSiteDetailHtml(site, vehicleProfile) {
-  const badges = buildSiteBadges(site);
-  const distStr = site.distance_km ? `${site.distance_km} km depuis Uchaud` : 'Distance inconnue';
+function buildSiteDetailHtml(site) {
+  const distStr  = site.distance_km ? `${site.distance_km} km` : null;
   const duration = estimateVisitDuration(site);
-  const whatToDo = buildWhatToDoList(site);
+  const visited  = isVisited(site.id);
 
-  // GPS links
-  const waze = buildWazeLink(site.lat, site.lon, site.destination);
+  // Navigation GPS
+  const waze  = buildWazeLink(site.lat, site.lon, site.destination);
   const gmaps = buildGoogleMapsLink(site.lat, site.lon, site.destination);
   const apple = buildAppleMapsLink(site.lat, site.lon, site.destination);
-  const gpsLinks = site.has_gps ? `
-    <div class="action-links">
-      ${waze ? `<a class="action-link waze" href="${waze}" target="_blank">🚗 Waze</a>` : ''}
-      ${gmaps ? `<a class="action-link gmaps" href="${gmaps}" target="_blank">🗺️ Google Maps</a>` : ''}
-      ${apple ? `<a class="action-link apple" href="${apple}" target="_blank"> Apple Plans</a>` : ''}
-    </div>` : `<p class="badge badge-gps-missing">📍 Coordonnées GPS à compléter</p>
-    <button class="gps-missing-btn" onclick="window.__openGpsEdit('${site.id}')">Saisir les coordonnées</button>`;
 
-  // Budget
-  const budget = buildBudget(site, site.distance_km, vehicleProfile, {});
-  const budgetHtml = renderBudget(budget);
+  const navHtml = site.has_gps ? `
+    <div class="sd-nav-row">
+      ${waze  ? `<a class="sd-nav-btn sd-nav-waze"  href="${waze}"  target="_blank" rel="noopener">🚗 Waze</a>` : ''}
+      ${gmaps ? `<a class="sd-nav-btn sd-nav-gmaps" href="${gmaps}" target="_blank" rel="noopener">🗺️ Maps</a>` : ''}
+      ${apple ? `<a class="sd-nav-btn sd-nav-apple" href="${apple}" target="_blank" rel="noopener">🍎 Plans</a>` : ''}
+    </div>` : `<p class="sd-no-gps">📍 Coordonnées GPS à compléter
+      <button class="sd-gps-btn" onclick="window.__openGpsEdit('${site.id}')">Saisir GPS</button></p>`;
 
-  // Énergie comparaison
-  let energyCompareHtml = '';
-  if (site.distance_km && vehicleProfile) {
-    const compare = compareAllScenarios(site.distance_km, vehicleProfile);
-    if (compare.scenarios.length > 1) {
-      const rows = compare.scenarios.map(s =>
-        `<div class="compare-row ${compare.cheapest?.label === s.label ? 'best' : ''}">
-          <span>${s.label}</span>
-          <span>${s.total_cost != null ? s.total_cost.toFixed(2)+' €' : 'À calculer'}</span>
-        </div>`).join('');
-      energyCompareHtml = `
-        <div class="energy-comparison">
-          <div class="energy-comparison-title">⚡ Comparaison énergie tous scénarios</div>
-          ${rows}
-          ${compare.cheapest ? `<div style="margin-top:6px;color:#27ae60;font-size:13px">✅ Option la moins chère estimée : ${compare.cheapest.label}</div>` : ''}
-          <p class="compare-disclaimer">${compare.disclaimer}</p>
-        </div>`;
-    }
-  }
+  // Infos rapides (pills)
+  const pills = [];
+  if (site._gratuit)       pills.push('<span class="sd-pill sd-pill-green">✅ Gratuit</span>');
+  else if (site.budget_indicatif) pills.push(`<span class="sd-pill sd-pill-blue">💶 ${site.budget_indicatif.substring(0,40)}</span>`);
+  if (site._sans_peage)    pills.push('<span class="sd-pill sd-pill-green">🛣️ Sans péage</span>');
+  else if (site._peage_probable) pills.push('<span class="sd-pill sd-pill-orange">🛣️ Péage possible</span>');
+  if (site._parking_gratuit) pills.push('<span class="sd-pill sd-pill-green">🅿️ Parking gratuit</span>');
+  if (site._famille)       pills.push('<span class="sd-pill sd-pill-blue">👨‍👩‍👧 Famille</span>');
+  if (site._photo)         pills.push('<span class="sd-pill sd-pill-blue">📸 Photo</span>');
+  if (site._pique_nique)   pills.push('<span class="sd-pill sd-pill-blue">🧺 Pique-nique</span>');
+  if (site._reservation)   pills.push('<span class="sd-pill sd-pill-orange">📞 Réservation conseillée</span>');
 
-  // Vérification énergie links
-  const energyLinks = buildEnergyVerificationLinks(vehicleProfile, site);
-  const energyLinksHtml = energyLinks.map(l => `<a href="${l.url}" target="_blank" class="action-link">${l.label}</a>`).join('');
-
-  // Tout ce qu'il y a à faire
-  const todoHtml = whatToDo.map(item =>
-    `<div class="detail-section">
-      <h4>${item.category}</h4>
-      <p>${item.content}</p>
-      ${!item.verified ? '<span class="verify-tag">Informations à confirmer</span>' : ''}
+  // Sections de contenu
+  const whatToDo = buildWhatToDoList(site);
+  const sectionsHtml = whatToDo.map(item => `
+    <div class="sd-section">
+      <div class="sd-section-title">${_sectionIcon(item.category)} ${item.category}</div>
+      <div class="sd-section-body">${item.content}</div>
     </div>`).join('');
 
-  // Insights visiteurs
-  const insightsHtml = renderInsightsSection(site);
+  // Budget simplifié (sans énergie véhicule)
+  const budgetRows = [];
+  if (site._gratuit) budgetRows.push({ label: 'Entrée', value: 'Gratuit', ok: true });
+  else if (site.budget_indicatif) budgetRows.push({ label: 'Budget', value: site.budget_indicatif.substring(0, 60) });
+  if (site._parking_gratuit) budgetRows.push({ label: 'Parking', value: 'Gratuit', ok: true });
+  else if (site.vigilance?.toLowerCase().includes('parking')) budgetRows.push({ label: 'Parking', value: 'À vérifier sur place' });
+  if (site._sans_peage) budgetRows.push({ label: 'Péage', value: 'Aucun', ok: true });
+  else if (site._peage_probable) budgetRows.push({ label: 'Péage', value: 'Probable', warn: true });
 
-  // Qualité données
-  const quality = site._data_quality;
-  const qualityBadge = quality.score >= 80
-    ? '<span class="badge badge-eco">Données complètes</span>'
-    : quality.score >= 50
-    ? '<span class="badge badge-warning">Données partielles</span>'
-    : '<span class="badge badge-danger">Données à compléter</span>';
+  const budgetHtml = budgetRows.length ? `
+    <div class="sd-section">
+      <div class="sd-section-title">💰 Budget indicatif</div>
+      <div class="sd-budget-grid">
+        ${budgetRows.map(r => `
+          <div class="sd-budget-row">
+            <span class="sd-budget-label">${r.label}</span>
+            <span class="sd-budget-val ${r.ok ? 'ok' : r.warn ? 'warn' : ''}">${r.value}</span>
+          </div>`).join('')}
+      </div>
+      <p class="sd-disclaimer">ℹ️ Vérifiez les tarifs sur place — ils peuvent changer.</p>
+    </div>` : '';
 
   return `
-    <div class="site-detail-title">${site.destination || site.nom || 'Site'}</div>
-    <div class="site-detail-subtitle">${site.secteur || ''} · ${distStr} · ${duration}</div>
-    <div class="site-badges">${badges} ${qualityBadge}</div>
+    <div class="sd-wrapper">
 
-    <div class="detail-section">
-      <h4>📍 Accès et navigation</h4>
-      ${gpsLinks}
-    </div>
-
-    ${todoHtml}
-
-    ${budgetHtml}
-    ${energyCompareHtml}
-
-    <div class="detail-section">
-      <h4>⚡ Vérifier les prix énergie</h4>
-      <div class="action-links">${energyLinksHtml}</div>
-    </div>
-
-    ${insightsHtml}
-
-    <div class="detail-section">
-      <div class="action-links">
-        <button class="action-link" onclick="window.__addToDayPlan('${site.id}')">📅 Ajouter au programme</button>
-        <button class="action-link" onclick="window.__openPhotoForSite('${site.id}')">📷 Voir photos</button>
+      <!-- HERO -->
+      <div class="sd-hero">
+        <div class="sd-title">${site.destination || site.nom || 'Site'}</div>
+        <div class="sd-meta">
+          ${site.secteur ? `<span>${site.secteur}</span>` : ''}
+          ${distStr ? `<span>📍 ${distStr} depuis Uchaud</span>` : ''}
+          ${duration ? `<span>⏱ ${duration}</span>` : ''}
+        </div>
+        <div class="sd-badges">${buildSiteBadges(site)}</div>
       </div>
-    </div>
 
-    <div style="margin-top:16px;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;font-size:12px;color:#aaa;line-height:1.6">
-      ⚠️ Toutes les informations de cette fiche sont issues du fichier Excel source et de calculs estimatifs.
-      Vérifiez horaires, tarifs, accès et conditions avant chaque sortie.
-      Les prix carburant et recharge changent régulièrement.
+      <!-- NAVIGATION -->
+      <div class="sd-block">
+        <div class="sd-block-title">🧭 Accès</div>
+        ${navHtml}
+      </div>
+
+      <!-- PILLS INFO -->
+      ${pills.length ? `<div class="sd-pills">${pills.join('')}</div>` : ''}
+
+      <!-- CONTENU -->
+      ${sectionsHtml}
+
+      <!-- BUDGET -->
+      ${budgetHtml}
+
+      <!-- ACTIONS -->
+      <div class="sd-actions">
+        <button id="btn-mark-visited" class="sd-action-btn ${visited ? 'visited-active' : ''}">
+          ${visited ? '✅ Déjà visité' : '👁️ Marquer comme vu'}
+        </button>
+        <button class="sd-action-btn sd-action-plan" onclick="window.__addToDayPlan('${site.id}')">
+          📅 Ajouter au programme
+        </button>
+        <button class="sd-action-btn sd-action-photo" onclick="window.__openPhotoForSite('${site.id}')">
+          📷 Photos
+        </button>
+      </div>
+
+      <p class="sd-footer-note">⚠️ Informations indicatives — vérifiez horaires et accès avant la sortie.</p>
     </div>`;
 }
 
+function _sectionIcon(category) {
+  const map = {
+    'Programme': '🎯', 'Points forts': '⭐', 'Niveau de marche': '🥾',
+    'À savoir avant': '💡', 'Informations pratiques': '📋'
+  };
+  return map[category] || '📌';
+}
+
 /* =========================================================
-   BLOC 04 — DIALOG SAISIE GPS
+   BLOC 04 — DIALOG GPS
    ========================================================= */
 export function openGpsEditDialog(siteId, onSave) {
   const lat = prompt('Latitude (ex: 43.8367) :');

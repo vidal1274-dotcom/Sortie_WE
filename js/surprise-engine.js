@@ -4,6 +4,7 @@
 import { getBestDeals } from './economy-engine.js';
 import { estimateTripEnergyCost } from './trip-energy-estimator.js';
 import { formatCurrency } from './utils.js';
+import { filterUnvisited } from './visited.js';
 
 /* =========================================================
    BLOC 02 — GÉNÉRATION D'UNE IDÉE SURPRISE
@@ -11,7 +12,7 @@ import { formatCurrency } from './utils.js';
 export function generateSurprise(sites, vehicleProfile, options = {}) {
   const { maxBudget = 30, maxKm = 60, preferGratuit = false, avoidTolls = true } = options;
 
-  let candidates = [...sites].filter(s => s.has_gps || s.distance_km != null);
+  let candidates = filterUnvisited([...sites]).filter(s => s.has_gps || s.distance_km != null);
 
   // Filtres préférentiels
   if (preferGratuit) candidates = candidates.filter(s => (s.budget_indicatif||'').toLowerCase().includes('gratu'));

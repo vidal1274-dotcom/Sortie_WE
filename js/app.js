@@ -26,6 +26,7 @@ import { addGoogleSearchToHistory } from './google-search.js';
 import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 import { initAuthScreen, logout, getCurrentUser } from './auth.js';
 import { generateDayPlan, renderDayPlan, saveDayPlan, loadSavedDayPlan, deleteSavedDayPlan, exportPlanAsText } from './day-plan.js';
+import { getVisitedIds } from './visited.js';
 // Imports lazy — chargés à la demande pour ne pas bloquer le démarrage
 let _fetchWeather = null;
 let _renderCarnet = null;

@@ -1075,6 +1075,158 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 .action-link.apple { border-color: rgba(180,180,180,0.3); color: #bbb; }
 
 /* =========================================================
+   BLOC 12b — FICHE SITE REDESIGNÉE
+   ========================================================= */
+.sd-wrapper { padding: 0 0 24px; }
+
+/* Hero */
+.sd-hero {
+  padding: 20px 20px 16px;
+  background: linear-gradient(160deg, rgba(233,69,96,0.1) 0%, transparent 60%);
+  border-bottom: 1px solid var(--color-border);
+}
+.sd-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-text);
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.sd-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-dim);
+  margin-bottom: 10px;
+}
+.sd-meta span { display: flex; align-items: center; gap: 4px; }
+.sd-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Bloc navigation */
+.sd-block { padding: 14px 20px; border-bottom: 1px solid var(--color-border); }
+.sd-block-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.sd-nav-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sd-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-card);
+  transition: all 0.18s;
+  flex: 1;
+  justify-content: center;
+  min-width: 90px;
+}
+.sd-nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+.sd-nav-waze  { border-color: rgba(30,191,179,0.5); color: #1ebfb3; }
+.sd-nav-gmaps { border-color: rgba(66,133,244,0.5); color: #6ba4f8; }
+.sd-nav-apple { border-color: rgba(180,180,180,0.3); color: #bbb; }
+.sd-no-gps { font-size: 13px; color: var(--color-text-dim); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sd-gps-btn { font-size: 12px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-text-dim); cursor: pointer; }
+
+/* Pills */
+.sd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+.sd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.sd-pill-green  { background: rgba(39,174,96,0.15);  border-color: rgba(39,174,96,0.4);  color: #2ecc71; }
+.sd-pill-blue   { background: rgba(93,173,226,0.15); border-color: rgba(93,173,226,0.4); color: #5dade2; }
+.sd-pill-orange { background: rgba(243,156,18,0.15); border-color: rgba(243,156,18,0.4); color: #f39c12; }
+
+/* Sections contenu */
+.sd-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+.sd-section:last-of-type { border-bottom: none; }
+.sd-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sd-section-body {
+  font-size: 14px;
+  color: var(--color-text-mid);
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+/* Budget simplifié */
+.sd-budget-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.sd-budget-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.sd-budget-label { color: var(--color-text-dim); }
+.sd-budget-val { font-weight: 600; color: var(--color-text); }
+.sd-budget-val.ok   { color: #2ecc71; }
+.sd-budget-val.warn { color: #f39c12; }
+.sd-disclaimer { font-size: 12px; color: var(--color-text-dim); margin-top: 6px; }
+
+/* Actions */
+.sd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+}
+.sd-action-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text);
+  transition: all 0.18s;
+  text-align: center;
+}
+.sd-action-btn:hover { border-color: var(--color-accent); transform: translateY(-1px); }
+.sd-action-btn.visited-active { border-color: #27ae60; background: rgba(39,174,96,0.15); color: #2ecc71; }
+.sd-action-plan { border-color: rgba(245,166,35,0.5); color: #f5a623; }
+.sd-action-plan:hover { background: rgba(245,166,35,0.15); }
+.sd-action-photo { border-color: rgba(233,69,96,0.4); color: #e94560; }
+.sd-action-photo:hover { background: rgba(233,69,96,0.1); }
+
+.sd-footer-note {
+  font-size: 11.5px;
+  color: var(--color-text-dim);
+  padding: 0 20px 4px;
+  line-height: 1.5;
+}
+
+/* =========================================================
    BLOC 13 — TOAST NOTIFICATIONS
    ========================================================= */
 #toast-container {
@@ -2281,6 +2433,40 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 .post-journal h4    { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 14px; }
 .post-mood-picker   { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .post-journal-save  { width: 100%; margin-top: 12px; padding: 12px; }
+
+/* =========================================================
+   BLOC — SITES VISITÉS
+   ========================================================= */
+.site-card--visited {
+  opacity: 0.55;
+  border-color: var(--color-border) !important;
+}
+.site-card--visited::before { background: #555 !important; }
+.site-card--visited .site-card-icon { filter: grayscale(0.8); }
+
+.btn-visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-dim);
+  transition: all 0.18s;
+  white-space: nowrap;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.btn-visited:hover { border-color: #27ae60; color: #27ae60; }
+.btn-visited.visited {
+  background: rgba(39,174,96,0.15);
+  border-color: #27ae60;
+  color: #27ae60;
+}
 
 /* =========================================================
    BLOC — PROGRAMME JOURNÉE
