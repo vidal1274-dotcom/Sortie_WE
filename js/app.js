@@ -80,9 +80,20 @@ async function startApp() {
 
   _upd('2/6 map init…');
   initMap('map');
+  // Force la couleur orange directement via JS + crée un bloc visible
+  const _mapEl = document.getElementById('map');
+  if (_mapEl) {
+    _mapEl.style.background = 'orange';
+    const _probe = document.createElement('div');
+    _probe.style.cssText = 'position:fixed;top:50%;left:10px;right:10px;transform:translateY(-50%);background:orange;color:#000;font-size:22px;font-weight:bold;text-align:center;padding:20px;border-radius:12px;z-index:9999990';
+    _probe.id = 'map-probe';
+    _probe.textContent = '🗺️ CARTE CHARGEE — Appuyez ici !';
+    document.body.appendChild(_probe);
+    _probe.addEventListener('click', () => _probe.remove());
+  }
   setTimeout(() => {
     const m = document.getElementById('map');
-    _upd('map: ' + (m ? m.clientWidth+'x'+m.clientHeight : 'introuvable'));
+    _upd('map: ' + (m ? m.clientWidth+'x'+m.clientHeight : 'introuvable') + ' bg:' + (m ? getComputedStyle(m).backgroundColor : '?'));
   }, 600);
   setTimeout(() => invalidateMapSize(), 300);
   setTimeout(() => invalidateMapSize(), 800);
