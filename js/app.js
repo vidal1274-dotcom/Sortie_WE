@@ -23,7 +23,7 @@ import { showToast } from './utils.js';
 import { buildVerificationLinks } from './energy-rules.js';
 import { exportAllData, importData } from './import-export.js';
 import { addGoogleSearchToHistory } from './google-search.js';
-// welcome.js conservé mais non utilisé au démarrage
+import { initWelcomeScreen, showWelcomeScreen } from './welcome.js';
 import { initAuthScreen, logout, getCurrentUser } from './auth.js';
 import { generateDayPlan, renderDayPlan, saveDayPlan, loadSavedDayPlan, deleteSavedDayPlan, exportPlanAsText } from './day-plan.js?v=26';
 import { getVisitedIds } from './visited.js?v=25';
@@ -117,11 +117,9 @@ async function startApp() {
   // Démarrage direct sur la carte, sans welcome screen
   switchToPanel('panel-map');
   onPanelChange('panel-map');
-  // Bouton maison → retour carte
-  document.getElementById('btn-welcome-home')?.addEventListener('click', () => {
-    switchToPanel('panel-map');
-    onPanelChange('panel-map');
-  });
+  // Bouton maison → écran de choix d'activité
+  initWelcomeScreen(onWelcomeModeSelect);
+  document.getElementById('btn-welcome-home')?.addEventListener('click', showWelcomeScreen);
 
   // Enregistrement de parcours GPS
   initTrackingUI();
