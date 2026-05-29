@@ -2705,3 +2705,86 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
   border-top: 1px solid var(--color-border);
 }
 .dp-btn-delete { color: #e74c3c !important; border-color: #e74c3c !important; }
+
+/* =========================================================
+   BLOC PROGRAMMATION
+   ========================================================= */
+#panel-prog { overflow: hidden; }
+.prog-toolbar {
+  display: flex; gap: 8px; padding: 10px 12px;
+  background: var(--color-card); border-bottom: 1px solid rgba(255,255,255,0.07);
+  position: relative; flex-shrink: 0;
+}
+#prog-search {
+  flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; padding: 8px 12px; color: #eaeaf0; font-size: 14px;
+}
+#prog-search:focus { outline: none; border-color: #e94560; }
+.prog-suggestions {
+  position: absolute; top: 100%; left: 12px; right: 12px; z-index: 100;
+  background: #1a1f3a; border: 1px solid rgba(233,69,96,0.3);
+  border-radius: 10px; max-height: 220px; overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.prog-suggestions.hidden { display: none; }
+.prog-sug-item {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13px; color: #eaeaf0;
+}
+.prog-sug-item:hover { background: rgba(233,69,96,0.12); }
+.prog-sug-item small { color: #7a7d99; margin-left: 6px; }
+.prog-stats {
+  display: flex; gap: 10px; align-items: center;
+  padding: 6px 14px; background: rgba(233,69,96,0.08);
+  font-size: 13px; font-weight: 700; color: #e94560; flex-shrink: 0;
+}
+.prog-stats.hidden { display: none; }
+.prog-sep { color: #5a5d7a; }
+.prog-body {
+  display: flex; flex: 1; min-height: 0; overflow: hidden;
+}
+.prog-list-col {
+  width: 44%; min-width: 200px; overflow-y: auto;
+  border-right: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+.prog-waypoints { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.prog-empty { padding: 24px 12px; text-align: center; color: #5a5d7a; font-size: 13px; }
+.prog-wp {
+  background: var(--color-card); border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.prog-wp.prog-wp-origin { border-color: rgba(233,69,96,0.4); }
+.prog-wp-num {
+  width: 24px; height: 24px; border-radius: 50%; background: #e94560;
+  color: #fff; font-size: 11px; font-weight: 800; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.prog-wp-origin .prog-wp-num { background: #7a7d99; }
+.prog-wp-info { flex: 1; min-width: 0; }
+.prog-wp-name { font-size: 13px; font-weight: 700; color: #eaeaf0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prog-wp-dist { font-size: 11px; color: #7a7d99; margin-top: 2px; }
+.prog-wp-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.prog-wp-btn {
+  background: none; border: none; cursor: pointer; font-size: 14px;
+  padding: 4px; border-radius: 6px; color: #7a7d99; transition: color 0.15s;
+}
+.prog-wp-btn:hover { color: #eaeaf0; }
+.prog-map { flex: 1; min-height: 0; }
+@media (max-width: 600px) {
+  .prog-body { flex-direction: column; }
+  .prog-list-col { width: 100%; max-height: 45%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .prog-map { min-height: 55%; }
+}
+
+/* =========================================================
+   BLOC CARNET — ASCENSEUR
+   ========================================================= */
+#panel-carnet { display: flex; flex-direction: column; overflow: hidden; }
+#panel-carnet #carnet-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 24px;
+}

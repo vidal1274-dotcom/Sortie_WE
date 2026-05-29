@@ -31,6 +31,7 @@ import { getVisitedIds } from './visited.js?v=25';
 let _fetchWeather = null;
 let _renderCarnet = null;
 let _saveJournalToSession = null;
+let _initProg = null, _refreshProg = null;
 async function _loadWeather() {
   if (!_fetchWeather) { try { const m = await import('./weather.js'); _fetchWeather = m.fetchWeather; } catch(e) {} }
   return _fetchWeather;
@@ -402,6 +403,16 @@ async function onPanelChange(panelId) {
     setTimeout(() => { invalidateMapSize(); fitBoundsToSites(_filteredSites); }, 80);
   }
   if (panelId === 'panel-photos') updatePhotoPanel();
+  if (panelId === 'panel-prog') {
+    if (!_initProg) {
+      const m = await import('./programmation.js?v=27');
+      _initProg = m.initProgPanel;
+      _refreshProg = m.refreshProgPanel;
+      _initProg(_sites);
+    } else {
+      _refreshProg();
+    }
+  }
   if (panelId === 'panel-carnet') {
     const container = document.getElementById('carnet-container');
     await _loadCarnet();

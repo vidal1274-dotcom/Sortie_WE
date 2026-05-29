@@ -12,7 +12,7 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=16" />
+  <link rel="stylesheet" href="styles.css?v=17" />
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="assets/vendor/leaflet.css" />
@@ -95,6 +95,7 @@
   <button class="nav-tab" data-panel="panel-carnet">📔 Carnet</button>
   <button class="nav-tab" data-panel="panel-photos">📷 Photos</button>
   <button class="nav-tab" data-panel="panel-settings">⚙️ Paramètres</button>
+  <button class="nav-tab" data-panel="panel-prog">📍 Programme</button>
 </nav>
 
 <!-- ═══════════════════════════════════════════════
@@ -273,13 +274,6 @@
   <section id="panel-settings" class="panel">
     <div class="settings-container">
 
-      <!-- Vérification énergie -->
-      <div class="settings-section" id="section-energy-check">
-        <h3>⚡ Vérification énergie</h3>
-        <p class="info-disclaimer">Les prix changent régulièrement. Vérifiez avant chaque sortie.</p>
-        <div id="energy-verification-links" class="verification-links"></div>
-      </div>
-
       <!-- Paramètres NAS -->
       <div class="settings-section" id="section-nas">
         <h3>💾 Serveur NAS (photos)</h3>
@@ -309,6 +303,37 @@
         <button id="btn-reset-sw" class="btn-secondary" style="border-color:#e74c3c;color:#e74c3c">🗑️ Vider le cache et recharger</button>
       </div>
 
+    </div>
+  </section>
+
+
+  <!-- Panneau Programmation -->
+  <section id="panel-prog" class="panel">
+    <!-- Barre d'outils -->
+    <div class="prog-toolbar">
+      <input type="text" id="prog-search" placeholder="Ajouter un site au parcours…" autocomplete="off" />
+      <div id="prog-suggestions" class="prog-suggestions hidden"></div>
+      <button id="btn-prog-clear" class="btn-secondary">&#x1F5D1;&#xFE0F; Vider</button>
+      <button id="btn-prog-save" class="btn-secondary">&#x1F4BE; Sauver</button>
+    </div>
+    <!-- Stats du parcours -->
+    <div id="prog-stats" class="prog-stats hidden">
+      <span id="prog-stat-stops">0 étapes</span>
+      <span class="prog-sep">·</span>
+      <span id="prog-stat-dist">0 km</span>
+      <span class="prog-sep">·</span>
+      <span id="prog-stat-time">0h00</span>
+    </div>
+    <!-- Contenu principal : liste gauche + carte droite -->
+    <div class="prog-body">
+      <!-- Liste des étapes (scrollable) -->
+      <div class="prog-list-col">
+        <div id="prog-waypoints" class="prog-waypoints">
+          <div class="prog-empty">Aucune étape — recherchez un site ci-dessus</div>
+        </div>
+      </div>
+      <!-- Carte Leaflet -->
+      <div id="prog-map" class="prog-map"></div>
     </div>
   </section>
 
@@ -475,7 +500,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 <button id="btn-scroll-top" aria-label="Retour en haut">↑</button>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=27"></script>
+<script type="module" src="js/app.js?v=28"></script>
 
 </body>
 </html>
