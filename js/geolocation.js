@@ -8,7 +8,7 @@ const LS_KEY_ORIGIN   = 'user_origin_coords';
 const LS_KEY_LABEL    = 'user_origin_label';
 const LS_KEY_MAX_KM   = 'user_max_distance_km';
 
-export const ORIGIN_DEFAULT = { lat: UCHAUD_COORDS[0], lon: UCHAUD_COORDS[1], label: 'Uchaud' };
+export const ORIGIN_DEFAULT = { lat: UCHAUD_COORDS[0], lon: UCHAUD_COORDS[1], label: 'Nages' };
 
 export function getStoredOrigin() {
   const saved = lsGet(LS_KEY_ORIGIN);

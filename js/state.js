@@ -16,8 +16,8 @@ const _state = {
   isLoading: false,
   lastSyncAt: null,
   economyFilter: 'all',
-  originCoords: null,         // {lat, lon} — null = Uchaud par défaut
-  originLabel: 'Uchaud',      // étiquette affichée
+  originCoords: null,         // {lat, lon} — null = Nages par défaut
+  originLabel: 'Nages',       // étiquette affichée
   maxDistanceKm: 150          // 150 = pas de filtre distance
 };
 

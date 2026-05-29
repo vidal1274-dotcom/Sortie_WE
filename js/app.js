@@ -345,7 +345,7 @@ function initLocationBar() {
   // Bouton GPS
   btn?.addEventListener('click', async () => {
     if (isUsingGps()) {
-      // Basculer vers Uchaud
+      // Basculer vers Nages
       clearUserLocation();
       _originCoords = { lat: ORIGIN_DEFAULT.lat, lon: ORIGIN_DEFAULT.lon };
       clearUserLocationMarker();
@@ -353,7 +353,7 @@ function initLocationBar() {
       _sites = enrichSitesWithEcoScore(_sites, _vehicleProfile);
       updateLocationUI();
       applyFiltersAndRender();
-      showToast('Point de départ : Uchaud', 'info');
+      showToast('Point de départ : Nages', 'info');
       return;
     }
     // Demander la localisation GPS

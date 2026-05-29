@@ -5,12 +5,12 @@
 export const APP_VERSION = '1.0.0';
 export const APP_NAME = 'TREKKO';
 
-export const MAP_CENTER = [43.8367, 4.3601]; // Uchaud / Nîmes
+export const MAP_CENTER = [43.7169, 4.3789]; // Nages-et-Solorgues
 export const MAP_ZOOM_DEFAULT = 10;
 export const MAP_ZOOM_MIN = 6;
 export const MAP_ZOOM_MAX = 18;
 
-export const UCHAUD_COORDS = [43.7437, 4.4096]; // Point de départ (Uchaud)
+export const UCHAUD_COORDS = [43.7169, 4.3789]; // Point de départ (Nages-et-Solorgues)
 
 export const SITES_JSON_URL = 'sites.json';
 export const CACHE_VERSION = 'trekko-v1';
