@@ -561,12 +561,14 @@ function renderEnergyVerificationLinks() {
    ========================================================= */
 let _rsInterval = null, _rsStartTime = null, _rsPausedMs = 0, _rsPauseAt = null;
 let _rsState = 'idle', _rsSplitCount = 0, _rsLockHold = null;
+let _rsActivityType = 'running';
+let _rsMap = null, _rsMapMarker = null, _rsMapLine = null, _rsMapPoints = [];
 const _rsWt = () => parseInt(localStorage.getItem('trekko_weight_kg') || '70', 10);
 
 function initRunningScreen() {
   document.getElementById('btn-rs-back')?.addEventListener('click', () => {
     if (_rsState !== 'idle') {
-      if (!confirm('Abandonner la course en cours ?')) return;
+      if (!confirm('Abandonner l\'activité en cours ?')) return;
       _rsStopForce();
     }
     document.getElementById('running-screen')?.classList.add('hidden');
@@ -591,6 +593,21 @@ function initRunningScreen() {
   });
   unlockBtn?.addEventListener('pointerup',     () => { clearTimeout(_rsLockHold); _rsLockHold = null; });
   unlockBtn?.addEventListener('pointercancel', () => { clearTimeout(_rsLockHold); _rsLockHold = null; });
+
+  // Sélecteur type d'activité
+  const typeLabels = { running: 'COURSE À PIED', cycling: 'VÉLO', walking: 'MARCHE' };
+  document.querySelectorAll('.rs-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.rs-type-btn').forEach(b => b.classList.remove('rs-type-active'));
+      btn.classList.add('rs-type-active');
+      _rsActivityType = btn.dataset.rtype;
+      const label = typeLabels[_rsActivityType] || 'COURSE À PIED';
+      const titleEl = document.getElementById('rs-activity-title');
+      if (titleEl) titleEl.textContent = label;
+      const startBtn = document.getElementById('btn-rs-start');
+      if (startBtn) startBtn.textContent = `DÉMARRER  →`;
+    });
+  });
 }
 
 async function _rsStartCountdown() {
@@ -608,8 +625,9 @@ async function _rsStartCountdown() {
   await new Promise(r => setTimeout(r, 600));
   if (cdEl) cdEl.classList.add('hidden');
 
-  const label = `🏃 Course — ${new Date().toLocaleDateString('fr-FR')}`;
-  await startTracking(label, false, 'running', 20, _rsWt());
+  const typeNames = { running: 'Course', cycling: 'Vélo', walking: 'Marche' };
+  const label = `🏃 ${typeNames[_rsActivityType] || 'Course'} — ${new Date().toLocaleDateString('fr-FR')}`;
+  await startTracking(label, false, _rsActivityType, 20, _rsWt());
   _rsStartTime  = Date.now();
   _rsPausedMs   = 0;
   _rsPauseAt    = null;
@@ -617,7 +635,7 @@ async function _rsStartCountdown() {
   _rsSetState('running');
   _rsCheckGPS();
   _rsInterval = setInterval(_rsUpdate, 1000);
-  _rsSpeak('Course démarrée. Bonne chance !');
+  _rsSpeak('Activité démarrée. Bonne chance !');
 }
 
 function _rsPause() {
@@ -662,11 +680,11 @@ async function _rsStopForce() {
 
 function _rsSetState(s) {
   _rsState = s;
-  const startBtn  = document.getElementById('btn-rs-start');
+  const idleCtrl  = document.getElementById('rs-idle-ctrl');
   const runCtrl   = document.getElementById('rs-run-ctrl');
   const pauseCtrl = document.getElementById('rs-pause-ctrl');
   const apBanner  = document.getElementById('rs-autopause-banner');
-  if (startBtn)  startBtn.classList.toggle('hidden',  s !== 'idle');
+  if (idleCtrl)  idleCtrl.classList.toggle('hidden',  s !== 'idle');
   if (runCtrl)   runCtrl.classList.toggle('hidden',   s !== 'running');
   if (pauseCtrl) pauseCtrl.classList.toggle('hidden', s !== 'paused');
   if (apBanner)  apBanner.classList.add('hidden');
@@ -678,20 +696,17 @@ function _rsUpdate() {
   const now    = Date.now();
   const active = (now - _rsStartTime) - _rsPausedMs;
   const durMin = active / 60000;
-  const water  = calculateWaterNeeds('running', durMin, 20);
+  const water  = calculateWaterNeeds(_rsActivityType, durMin, 20);
   const zone   = _rsZone(stats.paceMinKm);
 
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   set('rs-timer',    _rsFormatTimer(active));
-  set('rs-distance', stats.distanceKm.toFixed(2));
+  set('rs-distance', stats.distanceKm.toFixed(2).replace('.', ','));
   set('rs-pace',     _rsFormatPace(stats.paceMinKm));
-  set('rs-speed',    stats.speedKmh.toFixed(1));
+  set('rs-speed',    stats.speedKmh.toFixed(1).replace('.', ','));
   set('rs-elev',     `+${stats.elevGainM}`);
   set('rs-calories', stats.calories || 0);
   set('rs-water',    `💧 ${water.mlPerHour} mL/h`);
-
-  const paceEl = document.getElementById('rs-pace');
-  if (paceEl) paceEl.className = `rs-big-val ${zone.cls}`;
 
   const zoneBadge = document.getElementById('rs-zone-badge');
   if (zoneBadge) {
@@ -706,7 +721,6 @@ function _rsUpdate() {
   if (stats.splits && stats.splits.length > _rsSplitCount) {
     const split = stats.splits[stats.splits.length - 1];
     const pStr  = _rsFormatPace(split.paceMinKm);
-    set('rs-last-split', pStr);
     _rsSpeak(`Kilomètre ${split.km}. Allure ${pStr}.`);
     _rsSplitCount = stats.splits.length;
   }
@@ -717,6 +731,28 @@ function _rsUpdate() {
       _rsSpeak(`N'oublie pas de boire. Objectif ${water.mlPerHour} millilitres par heure.`);
     }
   }
+
+  _rsUpdateMap();
+}
+
+function _rsUpdateMap() {
+  if (!_rsMap) return;
+  navigator.geolocation?.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    _rsMapPoints.push([lat, lon]);
+    if (_rsMapMarker) {
+      _rsMapMarker.setLatLng([lat, lon]);
+    } else {
+      _rsMapMarker = L.circleMarker([lat, lon], {
+        radius: 9, fillColor: '#e94560', color: '#fff', weight: 2.5, fillOpacity: 1
+      }).addTo(_rsMap);
+    }
+    if (_rsMapPoints.length > 1) {
+      if (_rsMapLine) _rsMapLine.setLatLngs(_rsMapPoints);
+      else _rsMapLine = L.polyline(_rsMapPoints, { color: '#e94560', weight: 4, opacity: 0.9 }).addTo(_rsMap);
+    }
+    _rsMap.panTo([lat, lon]);
+  }, null, { maximumAge: 5000, timeout: 3000 });
 }
 
 function _rsFormatTimer(ms) {
@@ -758,20 +794,37 @@ function _rsCheckGPS() {
 
 function _rsResetMetrics() {
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('rs-timer', '0:00'); set('rs-distance', '0.00');
-  set('rs-pace', '—'); set('rs-speed', '0.0');
+  set('rs-timer', '0:00'); set('rs-distance', '0,00');
+  set('rs-pace', '—'); set('rs-speed', '0,0');
   set('rs-elev', '+0'); set('rs-calories', '0');
-  set('rs-water', '💧 —'); set('rs-last-split', '—');
+  set('rs-water', '💧 —');
   const badge = document.getElementById('rs-zone-badge');
   if (badge) { badge.textContent = '—'; badge.classList.add('hidden'); }
   const gps = document.getElementById('rs-gps-ind');
-  if (gps) gps.textContent = '⚫ GPS…';
+  if (gps) gps.textContent = '⚫';
+  // Réinitialiser la mini-carte
+  _rsMapPoints = [];
+  if (_rsMapLine)   { _rsMapLine.remove();   _rsMapLine   = null; }
+  if (_rsMapMarker) { _rsMapMarker.remove(); _rsMapMarker = null; }
 }
 
 function showRunningScreen() {
   switchToPanel('panel-map');
   setTimeout(() => invalidateMapSize(), 150);
   _rsCheckGPS();
+
+  // Initialiser la mini-carte GPS
+  const mapEl = document.getElementById('rs-map');
+  if (mapEl && !_rsMap) {
+    _rsMap = L.map('rs-map', { zoomControl: false, attributionControl: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(_rsMap);
+    _rsMap.setView([ORIGIN_DEFAULT.lat, ORIGIN_DEFAULT.lon], 15);
+  }
+  _rsMapPoints = [];
+  if (_rsMapLine)   { _rsMapLine.remove();   _rsMapLine   = null; }
+  if (_rsMapMarker) { _rsMapMarker.remove(); _rsMapMarker = null; }
+  if (_rsMap) setTimeout(() => _rsMap.invalidateSize(), 250);
+
   document.getElementById('running-screen')?.classList.remove('hidden');
 }
 
