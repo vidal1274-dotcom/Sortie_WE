@@ -67,6 +67,15 @@ const MODES = [
     panel: 'panel-photos',
     trackMode: null
   },
+  {
+    id:    'programme',
+    emoji: '📍',
+    title: 'Programme',
+    desc:  'Planifier ma journée · Lieux · Itinéraire',
+    color: '#1abc9c',
+    panel: 'panel-prog',
+    trackMode: null
+  },
 ];
 
 /* =========================================================
@@ -119,14 +128,11 @@ export function showWelcomeScreen() {
 }
 
 export function hideWelcomeScreen() {
+  // Retrait immédiat de welcome-open pour débloquer #app-main avant switchToPanel
+  document.body.classList.remove('welcome-open');
   const el = document.getElementById('welcome-screen');
   if (el) {
-    el.classList.add('welcome-animate-out');
-    setTimeout(() => {
-      el.classList.remove('welcome-animate-out');
-      el.classList.add('hidden');
-      document.body.classList.remove('welcome-open');
-    }, 280);
+    el.classList.add('hidden');
   }
 }
 
