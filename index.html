@@ -12,7 +12,7 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20" />
+  <link rel="stylesheet" href="styles.css?v=21" />
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="assets/vendor/leaflet.css" />
@@ -309,9 +309,23 @@
 
   <!-- Panneau Programmation -->
   <section id="panel-prog" class="panel">
-    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#5a5d7a;font-size:15px;">
-      &#x1F4CD; En cours de construction&#x2026;
+
+    <!-- Barre de recherche de lieux -->
+    <div class="prog2-search-bar">
+      <div class="prog2-search-wrap">
+        <span class="prog2-search-icon">&#x1F50D;</span>
+        <input id="prog2-input" type="text"
+               placeholder="Rechercher un lieu&#x2026;"
+               autocomplete="off" autocorrect="off" spellcheck="false" />
+      </div>
+      <div id="prog2-results" class="prog2-results hidden"></div>
     </div>
+
+    <!-- Liste des lieux ajoutés -->
+    <div id="prog2-list" class="prog2-list">
+      <div class="prog2-empty">Aucun lieu &#x2014; utilisez la recherche ci-dessus</div>
+    </div>
+
   </section>
 
 </main>
@@ -477,7 +491,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 <button id="btn-scroll-top" aria-label="Retour en haut">↑</button>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=33"></script>
+<script type="module" src="js/app.js?v=34"></script>
 
 </body>
 </html>

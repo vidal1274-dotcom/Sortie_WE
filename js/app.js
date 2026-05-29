@@ -31,7 +31,7 @@ import { getVisitedIds } from './visited.js?v=25';
 let _fetchWeather = null;
 let _renderCarnet = null;
 let _saveJournalToSession = null;
-let _initProg = null, _refreshProg = null;
+let _initProg = null;
 async function _loadWeather() {
   if (!_fetchWeather) { try { const m = await import('./weather.js'); _fetchWeather = m.fetchWeather; } catch(e) {} }
   return _fetchWeather;
@@ -402,13 +402,10 @@ async function onPanelChange(panelId) {
   }
   if (panelId === 'panel-photos') updatePhotoPanel();
   if (panelId === 'panel-prog') {
-    if (false && !_initProg) { // désactivé temporairement
-      const m = await import('./programmation.js?v=2');
-      _initProg = m.initProgPanel;
-      _refreshProg = m.refreshProgPanel;
+    if (!_initProg) {
+      const m = await import('./programme.js?v=1');
+      _initProg = m.initProgramme;
       _initProg(_sites);
-    } else {
-      _refreshProg();
     }
   }
   if (panelId === 'panel-carnet') {
