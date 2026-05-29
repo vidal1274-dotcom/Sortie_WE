@@ -2709,7 +2709,7 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 /* =========================================================
    BLOC PROGRAMMATION
    ========================================================= */
-#panel-prog { display: flex; flex-direction: column; overflow: hidden; }
+#panel-prog { overflow: hidden; }
 
 /* Toolbar */
 .prog-toolbar {
@@ -2831,7 +2831,7 @@ input[type="range"] { accent-color: var(--color-accent); cursor: pointer; }
 /* =========================================================
    BLOC CARNET — ASCENSEUR
    ========================================================= */
-#panel-carnet { display: flex; flex-direction: column; overflow: hidden; }
+#panel-carnet { overflow: hidden; }
 #panel-carnet #carnet-container {
   flex: 1;
   overflow-y: auto;

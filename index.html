@@ -12,7 +12,7 @@
 
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=19" />
 
   <!-- Leaflet CSS (local) -->
   <link rel="stylesheet" href="assets/vendor/leaflet.css" />
@@ -74,7 +74,7 @@
   </div>
   <div class="header-right">
     <button id="btn-logout" class="btn-icon hidden" title="Se déconnecter">👤</button>
-    <button id="btn-welcome-home" class="btn-icon" title="Accueil — Choisir une activité">🏠</button>
+    <button id="btn-welcome-home" class="btn-icon" title="Accueil — Choisir une activité" onclick="if(window._showWelcome)window._showWelcome()">🏠</button>
     <button id="btn-network-status" class="btn-icon" title="Statut réseau">📶</button>
     <button id="btn-surprise" class="btn-icon" title="Surprenez-moi !" aria-label="Idée surprise">🎲</button>
   </div>
@@ -511,7 +511,7 @@ window.addEventListener('unhandledrejection',function(e){var d=document.getEleme
 <button id="btn-scroll-top" aria-label="Retour en haut">↑</button>
 
 <!-- Modules JS (ESM) -->
-<script type="module" src="js/app.js?v=30"></script>
+<script type="module" src="js/app.js?v=31"></script>
 
 </body>
 </html>

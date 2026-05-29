@@ -119,7 +119,7 @@ async function startApp() {
   onPanelChange('panel-map');
   // Bouton maison → écran de choix d'activité
   initWelcomeScreen(onWelcomeModeSelect);
-  document.getElementById('btn-welcome-home')?.addEventListener('click', showWelcomeScreen);
+  window._showWelcome = showWelcomeScreen; // accessible depuis onclick HTML
 
   // Enregistrement de parcours GPS
   initTrackingUI();

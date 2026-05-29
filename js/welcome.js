@@ -112,6 +112,7 @@ export function showWelcomeScreen() {
   const el = document.getElementById('welcome-screen');
   if (el) {
     el.classList.remove('hidden');
+    el.style.display = 'flex'; // force — contourne toute règle CSS concurrente
     el.classList.add('welcome-animate-in');
     setTimeout(() => el.classList.remove('welcome-animate-in'), 400);
   }
